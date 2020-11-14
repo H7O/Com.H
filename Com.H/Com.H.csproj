@@ -4,8 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.0.1</Version>
     <Authors>Hussein Al Bayati</Authors>
-    <Description>General purpose library containing a collection of helpful functionalities.</Description>
+    <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/H7O/Com.H</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
   </PropertyGroup>
 
 </Project>

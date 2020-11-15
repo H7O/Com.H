@@ -12,4 +12,11 @@
     <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
 </Project>

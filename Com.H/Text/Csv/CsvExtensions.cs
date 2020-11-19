@@ -15,7 +15,6 @@ namespace Com.H.Text.Csv
         /// <returns></returns>
         public static string ToCsv(this IEnumerable<string> enumerable, string delimiter = ",")
             => enumerable == null ? "" :
-            string.Concat(enumerable.SelectMany(x =>
-                new string[] { delimiter, x }).Skip(1));
+            string.Join(delimiter, enumerable);
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Com.H.Net
 {
@@ -27,5 +29,43 @@ namespace Com.H.Net
             using (var reader = new StreamReader(req.GetResponse().GetResponseStream()))
                 return reader.ReadToEnd();
         }
+
+        public static Task<string> GetContentAsync(
+            this Uri uri,
+            CancellationToken? token = null,
+            string referer = null,
+            string userAgent = null
+            )
+        {
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
+            WebRequest req;
+            if (!string.IsNullOrEmpty(referer) || !string.IsNullOrEmpty(userAgent))
+            {
+                req = (HttpWebRequest)WebRequest.Create(uri);
+                ((HttpWebRequest)req).Referer = referer;
+                ((HttpWebRequest)req).UserAgent = userAgent;
+            }
+            else req = WebRequest.Create(uri);
+            return Task.Run<string>(() =>
+            {
+                var resp = req.GetResponseAsync();
+                if (token != null)
+                    resp.Wait();
+                else resp.Wait((CancellationToken) token);
+                if (!resp.IsCompleted) return null;
+                using (var r = new StreamReader(resp.GetAwaiter().GetResult().GetResponseStream()))
+                {
+                    var content = r.ReadToEndAsync();
+                    if (token != null)
+                        content.Wait();
+                    else content.Wait((CancellationToken)token);
+                    if (!content.IsCompleted) return null;
+                    return content.GetAwaiter().GetResult();
+                }
+            });
+            
+        }
+
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Com.H.Data.Linq
+namespace Com.H.Linq
 {
     public static class JoinExtensions
     {

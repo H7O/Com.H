@@ -51,15 +51,15 @@ namespace Com.H.Net
             {
                 var resp = req.GetResponseAsync();
                 if (token != null)
-                    resp.Wait();
-                else resp.Wait((CancellationToken) token);
+                    resp.Wait((CancellationToken)token);
+                else resp.Wait();
                 if (!resp.IsCompleted) return null;
                 using (var r = new StreamReader(resp.GetAwaiter().GetResult().GetResponseStream()))
                 {
                     var content = r.ReadToEndAsync();
                     if (token != null)
-                        content.Wait();
-                    else content.Wait((CancellationToken)token);
+                        content.Wait((CancellationToken)token);
+                    else content.Wait();
                     if (!content.IsCompleted) return null;
                     return content.GetAwaiter().GetResult();
                 }

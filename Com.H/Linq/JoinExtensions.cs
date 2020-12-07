@@ -70,7 +70,7 @@ namespace Com.H.Linq
                 outerKeySelector,
                 innerKeySelector,
                 (o, i) =>
-                    new { o = o, i = i.DefaultIfEmpty() })
+                    new { o, i = i.DefaultIfEmpty() })
                     .SelectMany(m => m.i.Select(inn =>
                         resultSelector(m.o, inn)
                         ));
@@ -103,7 +103,7 @@ namespace Com.H.Linq
                 innerKeySelector,
                 outerKeySelector,
                 (i, o) =>
-                    new { i = i, o = o.DefaultIfEmpty() })
+                    new { i, o = o.DefaultIfEmpty() })
                     .SelectMany(m => m.o.Select(outt =>
                         resultSelector(outt, m.i)
                         ));

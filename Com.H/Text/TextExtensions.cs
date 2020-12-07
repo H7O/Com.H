@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Com.H.Linq;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -112,5 +113,91 @@ namespace Com.H.Text
                 ) return false;
             return null;
         }
+
+        private static string DictionaryParameterizedReplace(
+            this string text, 
+            IDictionary<string, object> parameters,
+            string openingMarker = null,
+            string closingMarker = null,
+            string nullValueReplacement = null
+            )
+        {
+            if (string.IsNullOrEmpty(text)
+                ||
+                (
+                    parameters == null
+                    ||
+                    parameters.Count<1
+                    && 
+                    (openingMarker == null || closingMarker == null)
+                )
+                ) return text;
+
+            
+            var paramList = (openingMarker==null || closingMarker == null)?
+                parameters.Keys.ToList()
+                :Regex.Matches(text, openingMarker + @"(?<param>.*?)?" + closingMarker)
+                .Cast<Match>()
+                .Select(x => x.Groups["param"].Value)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x).Distinct().ToList();
+
+            if (paramList.Count > 0)
+            {
+                var joined = paramList
+                    .LeftJoin(parameters,
+                    pl => pl.ToUpper(CultureInfo.InvariantCulture),
+                    p => p.Key.ToUpper(CultureInfo.InvariantCulture),
+                    (pl, p) => new { k = pl, v = p.Value }).ToList();
+
+                foreach (var item in joined)
+                {
+                    text = item.v == null?
+                            text.Replace(openingMarker + item.k + closingMarker,
+                            nullValueReplacement ?? "")
+                    :
+                    text.Replace(openingMarker + item.k + closingMarker,
+                            Convert.ChangeType(item.v, TypeCode.String, CultureInfo.InvariantCulture) as string
+                            );
+
+                }
+
+            }
+            return text;
+        }
+
+        /// <summary>
+        /// Fills a string having placeholders with information from a data model that has property names matching the string placeholders
+        /// 
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dataModel">Could be any class with properties matching the src string placeholders, 
+        /// or an IDictionary<string, object> where the IDictionary key is the property name, and the value is the placeholder replacement value</param>
+        /// <param name="openingMarker">placeholder opening marker, e.g. {{</param>
+        /// <param name="closingMarker">placeholder closing marker, e.g. }}</param>
+        /// <param name="nullValueReplacement">a default value for placeholders that don't have a matching property name in the data model</param>
+        /// <returns></returns>
+        public static string Fill(
+            this string src,
+            object dataModel,
+            string openingMarker = null,
+            string closingMarker = null,
+            string nullValueReplacement = null
+            )=>
+            DictionaryParameterizedReplace(
+                src, 
+                dataModel == null ? null
+                :
+                typeof(IDictionary<string, object>).IsAssignableFrom(dataModel.GetType())
+                ?
+                ((IDictionary<string, object>)dataModel)
+                :
+                dataModel.GetType().GetProperties()
+                                .ToDictionary(k => k.Name, v => v.GetValue(dataModel, null)),
+                openingMarker, 
+                closingMarker, 
+                nullValueReplacement
+                );
+            
     }
 }

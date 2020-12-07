@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

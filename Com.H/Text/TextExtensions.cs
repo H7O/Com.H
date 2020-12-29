@@ -168,7 +168,6 @@ namespace Com.H.Text
 
         /// <summary>
         /// Fills a string having placeholders with information from a data model that has property names matching the string placeholders
-        /// 
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dataModel">Could be any class with properties matching the src string placeholders, 
@@ -198,6 +197,46 @@ namespace Com.H.Text
                 closingMarker, 
                 nullValueReplacement
                 );
-            
+
+
+
+        /// <summary>
+        /// Fills a string having placeholders with date formatted in accordance to format string enclosed inside placeholder markers
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="dataModel">Could be any class with properties matching the src string placeholders, 
+        /// or an IDictionary<string, object> where the IDictionary key is the property name, and the value is the placeholder replacement value</param>
+        /// <param name="openingMarker">placeholder opening marker, e.g. {{</param>
+        /// <param name="closingMarker">placeholder closing marker, e.g. }}</param>
+        /// <param name="nullValueReplacement">a default value for placeholders that don't have a matching property name in the data model</param>
+        /// <returns></returns>
+        public static string FillDate(
+            this string src,
+            DateTime? date,
+            string openingMarker = "{date{",
+            string closingMarker = "}}",
+            string nullValueReplacement = null
+            )
+        {
+            if (string.IsNullOrEmpty(openingMarker)) throw new ArgumentNullException(nameof(openingMarker));
+            if (string.IsNullOrEmpty(closingMarker)) throw new ArgumentNullException(nameof(closingMarker));
+            return
+                DictionaryParameterizedReplace(
+                    src,
+                    Regex.Matches(src, openingMarker + @"(?<param>.*?)?" + closingMarker)
+                    .Cast<Match>()
+                    .Select(x => x.Groups["param"].Value)
+                    .Where(x => !string.IsNullOrEmpty(x))
+                    .Select(x => x).Distinct()
+                    .ToDictionary(k => k,
+                    v => date==null?"":(object)((DateTime)date).ToString(v)),
+                openingMarker,
+                closingMarker,
+                nullValueReplacement
+                );
+
+        }
+
+
     }
 }

@@ -11,6 +11,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Copyright>Hussein Al Bayati</Copyright>
   </PropertyGroup>
 
 </Project>

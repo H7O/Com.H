@@ -29,11 +29,11 @@ namespace Com.H.IO
         /// <param name="dateTime"></param>
         /// <returns></returns>
         public static string ToDirectoryPath(this DateTime dateTime)
-        {
-            return dateTime.ToString("yyyy") + DirectorySeperatorString
-                + dateTime.ToString("MMM") + DirectorySeperatorString
-                + dateTime.ToString("dd");
-        }
+            =>
+                Path.Combine(dateTime.ToString("yyyy"),
+                                dateTime.ToString("MMM"),
+                                dateTime.ToString("dd"));
+        
         /// <summary>
         /// Formats DateTime to directory path string yyyy/MMM/dd (or yyyy\MMM\dd depending on host OS) 
         /// </summary>

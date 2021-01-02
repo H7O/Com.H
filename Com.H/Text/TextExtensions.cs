@@ -115,7 +115,7 @@ namespace Com.H.Text
         }
 
         private static string DictionaryParameterizedReplace(
-            this string text, 
+            this string text,
             IDictionary<string, object> parameters,
             string openingMarker = null,
             string closingMarker = null,
@@ -127,16 +127,16 @@ namespace Com.H.Text
                 (
                     parameters == null
                     ||
-                    parameters.Count<1
-                    && 
+                    parameters.Count < 1
+                    &&
                     (openingMarker == null || closingMarker == null)
                 )
                 ) return text;
 
-            
-            var paramList = (openingMarker==null || closingMarker == null)?
+
+            var paramList = (openingMarker == null || closingMarker == null) ?
                 parameters.Keys.ToList()
-                :Regex.Matches(text, openingMarker + @"(?<param>.*?)?" + closingMarker)
+                : Regex.Matches(text, openingMarker + @"(?<param>.*?)?" + closingMarker)
                 .Cast<Match>()
                 .Select(x => x.Groups["param"].Value)
                 .Where(x => !string.IsNullOrEmpty(x))
@@ -152,7 +152,7 @@ namespace Com.H.Text
 
                 foreach (var item in joined)
                 {
-                    text = item.v == null?
+                    text = item.v == null ?
                             text.Replace(openingMarker + item.k + closingMarker,
                             nullValueReplacement ?? "")
                     :
@@ -182,9 +182,9 @@ namespace Com.H.Text
             string openingMarker = null,
             string closingMarker = null,
             string nullValueReplacement = null
-            )=>
+            ) =>
             DictionaryParameterizedReplace(
-                src, 
+                src,
                 dataModel == null ? null
                 :
                 typeof(IDictionary<string, object>).IsAssignableFrom(dataModel.GetType())
@@ -193,8 +193,8 @@ namespace Com.H.Text
                 :
                 dataModel.GetType().GetProperties()
                                 .ToDictionary(k => k.Name, v => v.GetValue(dataModel, null)),
-                openingMarker, 
-                closingMarker, 
+                openingMarker,
+                closingMarker,
                 nullValueReplacement
                 );
 
@@ -229,13 +229,25 @@ namespace Com.H.Text
                     .Where(x => !string.IsNullOrEmpty(x))
                     .Select(x => x).Distinct()
                     .ToDictionary(k => k,
-                    v => date==null?"":(object)((DateTime)date).ToString(v)),
+                    v => date == null ? "" : (object)((DateTime)date).ToString(v)),
                 openingMarker,
                 closingMarker,
                 nullValueReplacement
                 );
-
         }
+
+        /// <summary>
+        /// Performs a case-insensitive search for a string within an IEnumerable and returns true if found.
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public static bool ContainsIgnoreCase(
+            this IEnumerable<string> list,
+            string item)
+            => list?.Select(x => x.ToUpperInvariant())?
+            .Contains(item?.ToUpperInvariant()) ?? false;
+
 
 
     }

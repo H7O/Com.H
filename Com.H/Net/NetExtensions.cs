@@ -26,8 +26,8 @@ namespace Com.H.Net
                 ((HttpWebRequest)req).UserAgent = userAgent;
             }
             else req = WebRequest.Create(uri);
-            using (var reader = new StreamReader(req.GetResponse().GetResponseStream()))
-                return reader.ReadToEnd();
+            using var reader = new StreamReader(req.GetResponse().GetResponseStream());
+            return reader.ReadToEnd();
         }
 
         public static Task<string> GetContentAsync(

@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Com.H.Threading;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Com.H.IO
 {
@@ -52,6 +55,76 @@ namespace Com.H.IO
         public static string DirectorySeperatorString { get; }
             = (Path.DirectorySeparatorChar == '\\' ? "\\" :
                 Path.DirectorySeparatorChar + "");
+
+        /// <summary>
+        /// Returns a temp file path.
+        /// </summary>
+        /// <param name="basePath"></param>
+        /// <returns></returns>
+        public static string GetTempFilePath(string basePath = null)
+            => Path.Combine(basePath??Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+
+        /// <summary>
+        /// Spin a task to attempt deleting an exclusively open file.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="miliseconds"></param>
+        /// <param name="persistCount"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static Task PersistantDelete(
+            this string path,
+            int deleteAttempts = 5,
+            int intervalBetweenAttempts = 1000, 
+            CancellationToken? token = null)
+        {
+            if (string.IsNullOrEmpty(path)) return Task.CompletedTask;
+            if (deleteAttempts < 1) deleteAttempts = 1;
+            void Delay()
+                =>
+                (token == null?Task.Delay(intervalBetweenAttempts) :
+                    Task.Delay(intervalBetweenAttempts, (CancellationToken)token))
+                        .GetAwaiter().GetResult();
+
+            bool IsCancelled() => token != null
+                            &&
+                            ((CancellationToken)token).IsCancellationRequested;
+            
+            void Delete()
+            {
+                int persist = 1;
+                while (Directory.Exists(path))
+                {
+                    try
+                    {
+                        Directory.Delete(path, true);
+                    }
+                    catch { Console.WriteLine("nope"); }
+                    if ((persist++) >= deleteAttempts) return;
+                    Delay();
+                    if (IsCancelled()) return;
+                }
+                while (File.Exists(path))
+                {
+                    try
+                    {
+                        File.Delete(path);
+                    }
+                    catch { }
+                    if ((persist++) >= deleteAttempts) return;
+                    Delay();
+                    if (IsCancelled()) return;
+
+                }
+            }
+
+            var task = (token == null ?
+                Task.Run(Delete)
+                : Task.Run(Delete, (CancellationToken)token));
+            task.ConfigureAwait(true);
+            return task;
+        }
+        
 
     }
 }

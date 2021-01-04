@@ -16,14 +16,15 @@ namespace Com.H.IO
         /// Ensures creating the parent directories for "path" if they do not exist already. 
         /// </summary>
         /// <param name="path">file or folder path</param>
-        public static void EnsureParentDirectory(this string path)
+        public static string EnsureParentDirectory(this string path)
         {
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 throw new ArgumentException($"{nameof(path)} contains invalid characters.");
             if (Directory.Exists(Directory.GetParent(path).FullName))
-                return;
+                return path;
             Directory.CreateDirectory(Directory.GetParent(path).FullName);
+            return path;
         }
 
         /// <summary>

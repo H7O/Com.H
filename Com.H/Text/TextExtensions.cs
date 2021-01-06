@@ -248,6 +248,34 @@ namespace Com.H.Text
             => list?.Select(x => x.ToUpperInvariant())?
             .Contains(item?.ToUpperInvariant()) ?? false;
 
+        public static IEnumerable<DateTime> ExtractDates(
+            this string text, 
+            string[] seperators = null)
+        {
+
+            var dates_string = text.Split(seperators?? new string[] { "|" },
+                  StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .AsEnumerable();
+
+            // normal
+            var normal = dates_string
+                  .Where(x => DateTime.TryParse(x, out _));
+
+            dates_string = dates_string.Except(normal);
+
+            // without year (MM-dd)
+            var MM_dd = dates_string.Where(x => Regex.IsMatch(x, @"d{1,2}\s*-\s*d{1,2}"));
+            dates_string = dates_string.Except(MM_dd);
+
+            // without year (MMM dd)
+            var MMM_dd = dates_string.Where(x => Regex.IsMatch(x, @"[a-zA-Z]+\sd{1,2}"));
+            //dates_string = dates_string.Except(MMM_dd);
+            MMM_dd = MMM_dd.Select(x => Regex.Replace(x, @"[ ]{2,}", " "));
+
+            return normal.Select(x => DateTime.Parse(x))
+                .Union(MM_dd.Select(x => DateTime.Parse($"{DateTime.Now.Year}-{x}")))
+                .Union(MMM_dd.Select(x => DateTime.Parse($"{x}, {DateTime.Now.Year}")));
+        }
 
 
     }

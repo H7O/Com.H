@@ -59,7 +59,7 @@ namespace Com.H.IO
                 Path.DirectorySeparatorChar + "");
 
         /// <summary>
-        /// Returns a temp file path.
+        /// Returns a temp file path without creating a zero byte file.
         /// </summary>
         /// <param name="basePath"></param>
         /// <returns></returns>
@@ -67,7 +67,7 @@ namespace Com.H.IO
             => Path.Combine(basePath??Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
 
         /// <summary>
-        /// Spin a task to attempt deleting an exclusively open file.
+        /// Spins a task to attempt deleting an exclusively open file.
         /// </summary>
         /// <param name="path"></param>
         /// <param name="miliseconds"></param>
@@ -127,6 +127,14 @@ namespace Com.H.IO
             return task;
         }
 
+        /// <summary>
+        /// Search files within a folder (and optionally its subfolders too) using a regex
+        /// then returns an IEnumerable of FileInfo as the result
+        /// </summary>
+        /// <param name="basePath"></param>
+        /// <param name="recursion"></param>
+        /// <param name="regexFilter"></param>
+        /// <returns></returns>
         public static IEnumerable<FileInfo> ListFiles(
             this string basePath, 
             bool recursion = false, 

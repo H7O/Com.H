@@ -9,6 +9,15 @@ namespace Com.H.Linq
 {
     public static class LinqExtensions
     {
+        /// <summary>
+        /// Filter a dictionary based on the passed keys in orderedFilter argument.
+        /// Then return the values those keys represents ordered in the order of the given orderFilter keys
+        /// </summary>
+        /// <typeparam name="TKey"></typeparam>
+        /// <typeparam name="TValue"></typeparam>
+        /// <param name="dictionary"></param>
+        /// <param name="orderedFilter"></param>
+        /// <returns></returns>
         public static IEnumerable<TValue> OrdinalFilter<TKey, TValue>(
             this IDictionary<TKey, TValue> dictionary, IEnumerable<TKey> orderedFilter)
             => orderedFilter == null ? null

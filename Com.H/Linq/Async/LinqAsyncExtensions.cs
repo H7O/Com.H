@@ -9,8 +9,15 @@ namespace Com.H.Linq.Async
 {
     public static class LinqAsyncExtensions
     {
+        /// <summary>
+        /// Converts ISyncEnumerable to Task of List
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="items"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public static async Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> items,
-            CancellationToken? cancellationToken = default)
+            CancellationToken? cancellationToken = null)
         {
             var list = new List<T>();
 

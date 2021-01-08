@@ -248,6 +248,14 @@ namespace Com.H.Text
             => list?.Select(x => x.ToUpperInvariant())?
             .Contains(item?.ToUpperInvariant()) ?? false;
 
+        /// <summary>
+        /// Extracts dates from a string, if the dates are partial dates without a year,
+        /// then this method extract them and returns them as dates by adding the current year.
+        /// E.g. for partial date: 'Nov 5' or '11-05'
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="seperators"></param>
+        /// <returns></returns>
         public static IEnumerable<DateTime> ExtractDates(
             this string text, 
             string[] seperators = null)

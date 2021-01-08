@@ -10,8 +10,19 @@ namespace Com.H.Text.Json
 {
     public static class JsonExtensions
     {
+        /// <summary>
+        /// Parses JSON text into dynamic object
+        /// </summary>
+        /// <param name="jsonText"></param>
+        /// <returns></returns>
         public static dynamic ParseJson(this string jsonText)
             => AsDynamic(JsonSerializer.Deserialize<dynamic>(jsonText));
+
+        /// <summary>
+        /// Converts a JsonElement to dynamic object
+        /// </summary>
+        /// <param name="jsonElement"></param>
+        /// <returns></returns>
         public static dynamic AsDynamic(this JsonElement jsonElement)
             =>
                 jsonElement.ValueKind switch

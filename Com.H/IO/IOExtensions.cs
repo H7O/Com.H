@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -125,7 +126,30 @@ namespace Com.H.IO
             task.ConfigureAwait(true);
             return task;
         }
-        
+
+        public static IEnumerable<FileInfo> ListFiles(
+            this string basePath, 
+            bool recursion = false, 
+            string regexFilter = null)
+        {
+            if (string.IsNullOrWhiteSpace(basePath)) yield break;
+            if (File.Exists(basePath))
+            {
+                if (regexFilter == null || Regex.IsMatch(basePath, regexFilter))
+                    yield return new FileInfo(basePath);
+                yield break;
+            }
+            
+            if (Directory.Exists(basePath))
+            {
+                foreach (var fInfo in Directory.GetFiles(basePath)
+                    .Union(Directory.GetDirectories(basePath))
+                    .Where(x=>recursion || !Directory.Exists(x))
+                    .SelectMany(x => ListFiles(x, recursion, regexFilter)))
+                    yield return fInfo;
+            }
+            yield break;
+        }
 
     }
 }

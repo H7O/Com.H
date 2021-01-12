@@ -44,5 +44,34 @@ namespace Com.H.Text.Csv
         public static IEnumerable<dynamic> ParsePsv(this string text)
             => text.ParseDelimited(new string[] { "\r", "\n" }, new string[] { "|" });
 
+        //public static void WriteCsv(
+        //    this IEnumerable<object> enumerables,
+        //    System.IO.Stream outStream,
+        //    bool excludeHeaders = false)
+        //{
+        //    foreach (var item in enumerables)
+        //    {
+        //        var properties = item?.GetType()?.GetCachedProperties()?.ToList();
+
+        //        if (properties == null || properties.Count < 1) continue;
+
+        //        #region headers
+        //        if (!excludeHeaders && !headersSet)
+        //        {
+        //            sheetData.Append(
+        //            new Row(
+        //            properties.Select(pInfo => new Cell()
+        //            {
+        //                CellValue = new CellValue(pInfo.Name),
+        //                DataType = new EnumValue<CellValues>(CellValues.String)
+        //            })));
+        //            headersSet = true;
+        //        }
+        //        #endregion
+        //    }
+
+
+        //}
     }
+
 }

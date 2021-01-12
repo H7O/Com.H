@@ -20,8 +20,7 @@ namespace Com.H.Linq
         /// <returns></returns>
         public static IEnumerable<TValue> OrdinalFilter<TKey, TValue>(
             this IDictionary<TKey, TValue> dictionary, IEnumerable<TKey> orderedFilter)
-            => orderedFilter == null ? null
-            : orderedFilter.Join(dictionary, o => o, d => d.Key, (o, d) => d.Value);
+            => orderedFilter?.Join(dictionary, o => o, d => d.Key, (o, d) => d.Value);
 
         /// <summary>
         /// Encloses a signle item into an Enumerable of its type, then returns the resulting Enumerable.

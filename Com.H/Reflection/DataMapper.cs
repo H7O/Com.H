@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Dynamic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -20,11 +21,18 @@ namespace Com.H.Reflection
         public (string Name, PropertyInfo Info)[] GetCachedProperties(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-
             return _typesProperties.ContainsKey(type) ?
                                 _typesProperties[type]
                                 : (_typesProperties[type] = GetPropertiesWithColumnName(type).ToArray());
         }
+        public (string Name, PropertyInfo Info)[] GetCachedProperties(object obj)
+        {
+            if (obj == null) throw new ArgumentNullException(nameof(obj));
+            if (obj.GetType() == typeof(ExpandoObject))
+                return ((ExpandoObject)obj).GetProperties().ToArray();
+            return GetCachedProperties(obj.GetType());
+        }
+
 
 
         private static IEnumerable<(string Name, PropertyInfo Info)> GetPropertiesWithColumnName(Type type)

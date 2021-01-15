@@ -1,4 +1,5 @@
-﻿using Com.H.Reflection;
+﻿using Com.H.IO;
+using Com.H.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -76,7 +77,7 @@ namespace Com.H.Text.Csv
         {
             
             bool headersSet = false;
-            using var writer = new StreamWriter(outStream, encoding ??= Encoding.UTF8);
+            var writer = new StreamWriter(outStream, encoding ??= Encoding.UTF8);
             foreach (var item in enumerables)
             {
                 var properties = item?.GetCachedProperties()?.ToList();
@@ -140,10 +141,10 @@ namespace Com.H.Text.Csv
 
             var path =
                 Path.Combine(tempBasePath,
-                (string.IsNullOrEmpty(preferredTempFileName) ? Guid.NewGuid().ToString()
-                : preferredTempFileName) + ".csv");
-
-            Directory.CreateDirectory(tempBasePath);
+                (string.IsNullOrEmpty(preferredTempFileName) ? 
+                Guid.NewGuid().ToString() + ".csv"
+                : preferredTempFileName)).EnsureParentDirectory();
+            
 
             if (File.Exists(path))
             {

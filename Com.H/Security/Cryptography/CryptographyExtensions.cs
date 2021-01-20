@@ -9,8 +9,8 @@ namespace Com.H.Security.Cryptography
     {
         public static string ToSha256InBase64String(this string text)
         {
-            using (var sha = SHA256.Create())
-                return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(text)));
+            using var sha = SHA256.Create();
+            return Convert.ToBase64String(sha.ComputeHash(Encoding.UTF8.GetBytes(text)));
         }
     }
 }

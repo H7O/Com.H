@@ -17,7 +17,7 @@ namespace Com.H.Xml.Linq
         /// <param name="keepRoot">Determines whether or not to ignore the root element of the XML when constructing the data model. Default is false (i.e. root element is ignored)</param>
         /// <returns></returns>
         public static dynamic ParseXml(this string xml, bool keepRoot = false)
-            => AsDynamic(XElement.Parse(xml));
+            => AsDynamic(XElement.Parse(xml), keepRoot);
 
 
         public static dynamic AsDynamic(this XElement xElement, bool keepRoot = false)

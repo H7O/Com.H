@@ -33,14 +33,14 @@ namespace Com.H.Linq
 
             var innerJoinItems = inner
                 .Where(innerItem => !outerLookup.Contains(innerKeySelector(innerItem)))
-                .Select(innerItem => resultSelector(default(TOuter), innerItem));
+                .Select(innerItem => resultSelector(default, innerItem));
 
             return outer
                 .SelectMany(outerItem =>
                 {
                     var innerItems = innerLookup[outerKeySelector(outerItem)];
 
-                    return innerItems.Any() ? innerItems : new TInner[] { default(TInner) };
+                    return innerItems.Any() ? innerItems : new TInner[] { default };
                 }, resultSelector)
                 .Concat(innerJoinItems);
         }

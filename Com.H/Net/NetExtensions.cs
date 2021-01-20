@@ -54,17 +54,26 @@ namespace Com.H.Net
                     resp.Wait((CancellationToken)token);
                 else resp.Wait();
                 if (!resp.IsCompleted) return null;
-                using (var r = new StreamReader(resp.GetAwaiter().GetResult().GetResponseStream()))
-                {
-                    var content = r.ReadToEndAsync();
-                    if (token != null)
-                        content.Wait((CancellationToken)token);
-                    else content.Wait();
-                    if (!content.IsCompleted) return null;
-                    return content.GetAwaiter().GetResult();
-                }
+                using var r = new StreamReader(resp.GetAwaiter().GetResult().GetResponseStream());
+                var content = r.ReadToEndAsync();
+                if (token != null)
+                    content.Wait((CancellationToken)token);
+                else content.Wait();
+                if (!content.IsCompleted) return null;
+                return content.GetAwaiter().GetResult();
             });
             
+        }
+
+        public static Uri GetParentUri(this Uri uri)
+        {
+            if (uri == null || uri.AbsoluteUri == null) return null;
+            var uriPath = uri.AbsoluteUri.EndsWith("/") ?
+                uri.AbsoluteUri.Remove(uri.AbsoluteUri.Length - 1) : uri.AbsoluteUri;
+            var lastIndexOfSeperator = uriPath.LastIndexOf("/");
+            if (lastIndexOfSeperator > -1)
+                return new Uri(uriPath.Substring(0, lastIndexOfSeperator + 1), UriKind.Absolute);
+            return new Uri(uri.AbsoluteUri, UriKind.Absolute);
         }
 
     }

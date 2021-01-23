@@ -14,15 +14,6 @@ namespace Com.H.Net.Mail
 
         #region properties
         private bool disposedValue;
-        /// <summary>
-        /// Delay in milisecond between delete attempts to attachments cache. (default is 1000)
-        /// </summary>
-        public int CleanupInterval { get; set; }
-        /// <summary>
-        /// Attempts to cleanup attachements before giving up if they are still locked by other process.
-        /// Default is 5
-        /// </summary>
-        public int CleanupAttempts { get; set; }
         public System.Net.Mail.SmtpDeliveryMethod? DeliveryMethod { get; set; }
         public string SmtpServer { get; set; }
         public int? Port { get; set; }
@@ -75,8 +66,7 @@ namespace Com.H.Net.Mail
 
         public bool IsHtml { get; set; }
 
-        public AttachmentCollection Attachment2 => this.Msg.Attachments;
-        public MailAttachmentCollection Attachments { get; private set; }
+        public MailAttachmentCollection Attachments { get; init; }
 
         #endregion
 
@@ -88,8 +78,7 @@ namespace Com.H.Net.Mail
             this.To = new List<string>();
             this.Cc = new List<string>();
             this.Bcc = new List<string>();
-            this.CleanupAttempts = 5;
-            this.CleanupInterval = 1000;
+
             this.Msg = new System.Net.Mail.MailMessage();
             this.Attachments = new MailAttachmentCollection();
         }
@@ -100,6 +89,7 @@ namespace Com.H.Net.Mail
         #region send
         public Task SendAsync(CancellationToken? token = null)
         {
+            if (this.disposedValue) throw new ObjectDisposedException("Message");
             if (string.IsNullOrWhiteSpace(this.SmtpServer)) 
                 throw new MissingFieldException(nameof(this.SmtpServer));
 

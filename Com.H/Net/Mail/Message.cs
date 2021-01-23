@@ -75,7 +75,8 @@ namespace Com.H.Net.Mail
 
         public bool IsHtml { get; set; }
 
-        public AttachmentCollection Attachments => this.Msg.Attachments;
+        public AttachmentCollection Attachment2 => this.Msg.Attachments;
+        public MailAttachmentCollection Attachments { get; private set; }
 
         #endregion
 
@@ -90,6 +91,7 @@ namespace Com.H.Net.Mail
             this.CleanupAttempts = 5;
             this.CleanupInterval = 1000;
             this.Msg = new System.Net.Mail.MailMessage();
+            this.Attachments = new MailAttachmentCollection();
         }
         #endregion
 
@@ -133,7 +135,8 @@ namespace Com.H.Net.Mail
             this.To.ForEach(x => this.Msg.To.Add(x));
             this.Cc.ForEach(x => this.Msg.CC.Add(x));
             this.Bcc.ForEach(x => this.Msg.Bcc.Add(x));
-            // this.Attachments.ForEach(x => msg.Attachments.Add(new System.Net.Mail.Attachment(x.FilePath)));
+            this.Attachments.List.ForEach(x => this.Msg.Attachments.Add(new System.Net.Mail.Attachment(x.Stream, x.FileName)));
+
             this.Msg.IsBodyHtml = this.IsHtml;
             this.Msg.Body = this.Body;
 
@@ -169,6 +172,8 @@ namespace Com.H.Net.Mail
                         this.Msg.Attachments.Clear();
                         this.Msg.Attachments.Dispose();
                         this.Msg.Dispose();
+
+                        this.Attachments.Dispose();
 
                     }
                     catch { }

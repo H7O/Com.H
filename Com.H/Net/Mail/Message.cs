@@ -63,7 +63,9 @@ namespace Com.H.Net.Mail
 
         private System.Net.Mail.MailMessage Msg { get; set; }
 
-
+        /// <summary>
+        /// Default: true
+        /// </summary>
         public bool IsHtml { get; set; }
 
         public MailAttachmentCollection Attachments { get; init; }

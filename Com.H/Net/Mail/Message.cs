@@ -98,14 +98,14 @@ namespace Com.H.Net.Mail
 
             if (this.From == null) throw new MissingFieldException(nameof(this.From));
             if (!this.From.IsEmail()) throw new FormatException($"{this.From} is not a well formed email");
-            this.To = this.To.Where(x => x.IsEmail()).ToList();
-            this.Cc = this.Cc.Where(x => x.IsEmail()).ToList();
-            this.Bcc = this.Bcc.Where(x => x.IsEmail()).ToList();
+            this.To = this.To?.Where(x => x.IsEmail()).ToList();
+            this.Cc = this.Cc?.Where(x => x.IsEmail()).ToList();
+            this.Bcc = this.Bcc?.Where(x => x.IsEmail()).ToList();
 
-            if (this.To == null) throw new MissingFieldException(nameof(this.To));
-            if (this.To.Count<1
-                && this.Cc.Count < 1
-                && this.Bcc.Count <1
+            //if (this.To == null) throw new MissingFieldException(nameof(this.To));
+            if ((this.To == null || this.To.Count<1)
+                && (this.Cc == null || this.Cc.Count < 1)
+                && (this.Bcc == null || this.Bcc.Count <1)
                 ) throw new MissingFieldException($"At least one valid email should be set for either To, Cc, or Bcc");
 
             System.Net.Mail.SmtpClient client = 
@@ -122,9 +122,9 @@ namespace Com.H.Net.Mail
                 client.DeliveryMethod = (System.Net.Mail.SmtpDeliveryMethod)DeliveryMethod;
 
             this.Msg.From = new System.Net.Mail.MailAddress(this.From);
-            this.To.ForEach(x => this.Msg.To.Add(x));
-            this.Cc.ForEach(x => this.Msg.CC.Add(x));
-            this.Bcc.ForEach(x => this.Msg.Bcc.Add(x));
+            this.To?.ForEach(x => this.Msg.To.Add(x));
+            this.Cc?.ForEach(x => this.Msg.CC.Add(x));
+            this.Bcc?.ForEach(x => this.Msg.Bcc.Add(x));
             this.Attachments.List.ForEach(x => this.Msg.Attachments.Add(new System.Net.Mail.Attachment(x.Stream, x.FileName)));
 
             this.Msg.IsBodyHtml = this.IsHtml;

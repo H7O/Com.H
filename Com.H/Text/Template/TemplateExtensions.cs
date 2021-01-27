@@ -1,4 +1,5 @@
-﻿using Com.H.Linq;
+﻿using Com.H.Data;
+using Com.H.Linq;
 using Com.H.Net;
 using Com.H.Text;
 using System;
@@ -11,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace Com.H.Text.Template
+namespace Com.H.Text2.Template
 {
     // note: fully working beta state (rough draft), requires heavy refactoring and optimization before final release
     public class TemplateDataRequest
@@ -21,21 +22,48 @@ namespace Com.H.Text.Template
         public string Request { get; set; }
         public dynamic DataModel { get; set; }
         public CancellationToken? CancellationToken { get; set; }
+        public string OpenMarker { get; set; }
+        public string CloseMarker { get; set; }
     }
 
-    public class TemplateDataResponse
+    public class DataModelContainer
     {
         public string OpeningMarker { get; set; }
         public string ClosingMarker { get; set; }
         public string NullReplacement { get; set; }
-        public IEnumerable<dynamic> Data { get; set; }
-        // todo: custom begin and end markers
+        public object Data { get; set; }
+
     }
+    //public class TemplateDataResponse
+    //{
+    //    public IEnumerable<dynamic> Data { get; set; }
+    //    // todo: custom begin and end markers
+    //}
     public static class TemplateExtensions
     {
-        // original without escape characters
+        // depreciated - original without escape characters
         //    \<(\s)*h\-embedded\-data(\s)*((\s)+(connection(\-|_)string(\s)*=(\s)*"(?<c_str>.*?)")|(content(\-|_)type(\s)*=(\s)*"(?<c_type>.*?)"))?(\s)+((connection(\-|_)string(\s)*=(\s)*"(?<c_str>.*?)")|(content(\-|_)type(\s)*=(\s)*"(?<c_type>.*?)"))?\>(\s)*\<\!\[CDATA\[(?<content>.*?)\]\]\>(\s)*\</h\-embedded\-data(\s)*\>
-        public static string DataTagRegex { get; set; } = @"\<(\s)*h\-embedded\-data(\s)*((\s)+(connection(\-|_)string(\s)*=(\s)*""(?<c_str>.*?)"")|(content(\-|_)type(\s)*=(\s)*""(?<c_type>.*?)""))?(\s)+((connection(\-|_)string(\s)*=(\s)*""(?<c_str>.*?)"")|(content(\-|_)type(\s)*=(\s)*""(?<c_type>.*?)""))?\>(\s)*\<\!\[CDATA\[(?<content>.*?)\]\]\>(\s)*\</h\-embedded\-data(\s)*\>";
+        // public static string DataTagRegex { get; set; } = @"\<(\s)*h\-embedded\-data(\s)*((\s)+(connection(\-|_)string(\s)*=(\s)*""(?<c_str>.*?)"")|(content(\-|_)type(\s)*=(\s)*""(?<c_type>.*?)""))?(\s)+((connection(\-|_)string(\s)*=(\s)*""(?<c_str>.*?)"")|(content(\-|_)type(\s)*=(\s)*""(?<c_type>.*?)""))?\>(\s)*\<\!\[CDATA\[(?<content>.*?)\]\]\>(\s)*\</h\-embedded\-data(\s)*\>";
+
+        #region data tag regex
+        // todo: combine them all into one regex
+        private static string DataTagContentRegex { get; set; } = @"\<(\s)*h\-embedded\-data.*?\>(\s)*\<\!\[CDATA\[(?<content>.*?)\]\]\>(\s)*\</h\-embedded\-data(\s)*\>";
+
+        private static string GetAttrib(this Match match, string attribName)
+        {
+            if (string.IsNullOrWhiteSpace(attribName)
+                || !match.Success
+                || string.IsNullOrWhiteSpace(match.Value)
+                ) return null;
+            var pattern = @"\<(\s)*h\-embedded\-data.*\b"
+                        + attribName.Replace("-", "\\-")
+                        + @"=""(?<val>[^""]*).*?\>";
+            var subMatch = Regex.Match(match.Value, pattern, RegexOptions.Singleline);
+            if (!subMatch.Success) return null;
+            return subMatch.Groups["val"]?.Value;
+        }
+        #endregion
+
 
         public static string TemplateTagRegex { get; set; } = @"\<(\s)*h\-embedded\-template(\s)*\>(\s)*\<\!\[CDATA\[(?<content>.*?)\]\]\>(\s)*\</h\-embedded\-template(\s)*\>";
 
@@ -46,7 +74,7 @@ namespace Com.H.Text.Template
              string openingMarker = "{{",
              string closingMarker = "}}",
              string nullReplacement = null,
-             Func<TemplateDataRequest, TemplateDataResponse> dataProviders = null,
+             Func<TemplateDataRequest, IEnumerable<dynamic>> dataProviders = null,
              CancellationToken? token = null,
              string referrer = null,
              string userAgent = null
@@ -67,7 +95,7 @@ namespace Com.H.Text.Template
          string openingMarker = "{{",
          string closingMarker = "}}",
          string nullReplacement = null,
-         Func<TemplateDataRequest, TemplateDataResponse> dataProviders = null,
+         Func<TemplateDataRequest, IEnumerable<dynamic>> dataProviders = null,
          CancellationToken? token = null,
          string referrer = null,
          string userAgent = null
@@ -114,7 +142,46 @@ namespace Com.H.Text.Template
         string openingMarker = "{{",
         string closingMarker = "}}",
         string nullReplacement = null,
-        Func<TemplateDataRequest, TemplateDataResponse> dataProviders = null,
+        Func<TemplateDataRequest, IEnumerable<dynamic>> dataProviders = null,
+        CancellationToken? token = null,
+        string referrer = null,
+        string userAgent = null
+        )
+        {
+            return RenderContent(uri
+                , new DataModelContainer
+                {
+                    Data = ((object)dataModel)?.EnsureEnumerable(),
+                    OpeningMarker = openingMarker,
+                    ClosingMarker = closingMarker,
+                    NullReplacement = nullReplacement
+                },
+                dataProviders,
+                token,
+                referrer,
+                userAgent
+                );
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        public static string RenderContent(
+        this Uri uri,
+        DataModelContainer dataModelContainer = null,
+        Func<TemplateDataRequest, IEnumerable<dynamic>> dataProviders = null,
         CancellationToken? token = null,
         string referrer = null,
         string userAgent = null
@@ -123,14 +190,15 @@ namespace Com.H.Text.Template
             // todo: needs heavy refactoring and optimizing
             #region retrieve content
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            if (dataModel != null)
+            if (dataModelContainer?.Data != null)
             {
+                //dataModelContainer.Data = dataModelContainer.Data.GetDataModelParameters();
                 // uri to use data model
                 uri = new Uri(uri.AbsoluteUri
-                    .Fill((object)dataModel,
-                    openingMarker,
-                    closingMarker,
-                    nullReplacement)
+                    .Fill(dataModelContainer.Data,
+                    dataModelContainer.OpeningMarker,
+                    dataModelContainer.ClosingMarker,
+                    dataModelContainer.NullReplacement)
                     , UriKind.Absolute);
             }
             if (!Uri.IsWellFormedUriString(uri.AbsoluteUri, UriKind.Absolute))
@@ -153,13 +221,15 @@ namespace Com.H.Text.Template
 
             #region check for data providers and data tag availability in content
 
-            TemplateDataResponse dataResponse = null;
+            IEnumerable<dynamic> dataResponse = null;
+            var nextOpenMarker = dataModelContainer?.OpeningMarker;
+            var nextCloseMarker = dataModelContainer?.ClosingMarker;
 
             if (dataProviders != null)
             {
 
                 var dataRequestMatch = Regex.Match(content,
-                    DataTagRegex,
+                    DataTagContentRegex,
                     RegexOptions.Singleline);
 
                 // get data if data request tags available
@@ -169,17 +239,24 @@ namespace Com.H.Text.Template
                     // as data model is submitted to data providers
                     // to allow data providers implement their own sql injection
                     // protection if needed
+
                     dataResponse = dataProviders(new()
                     {
                         Request = dataRequestMatch.Groups["content"]?.Value,
                         ConnectionString = dataRequestMatch
-                        .Groups["c_str"]?.Value,
+                        .GetAttrib("connection-string"),
                         ContentType = dataRequestMatch
-                        .Groups["c_type"]?.Value,
+                        .GetAttrib("content-type"),
                         CancellationToken = token,
-                        DataModel = dataModel
-
+                        DataModel = dataModelContainer?.Data?.GetDataModelParameters(),
+                        OpenMarker = dataModelContainer?.OpeningMarker,
+                        CloseMarker = dataModelContainer?.ClosingMarker
                     });
+
+                    nextOpenMarker =
+                        dataRequestMatch.GetAttrib("open-marker") ?? nextOpenMarker;
+                    nextCloseMarker =
+                       dataRequestMatch.GetAttrib("close-marker") ?? nextCloseMarker;
 
                 }
             }
@@ -192,42 +269,39 @@ namespace Com.H.Text.Template
 
 
 
-
             // remove the data tag if it was available as it should 
             // already be processed by now and not needed anymore
-            content = Regex.Replace(content, DataTagRegex,
+            content = Regex.Replace(content, DataTagContentRegex,
                 "", RegexOptions.Singleline);
 
 
-            // fill original (method caller not data provider caller) 
-            // data model along with original markers
-            //if (dataModel != null) content = content.Fill(
-            //    (object) dataModel, openingMarker, 
-            //    closingMarker, nullReplacement);
-
-            //// ensure there is a response
-            //if (dataResponse == null) dataResponse = new TemplateDataResponse();
-            //if (dataResponse.Data == null) dataResponse.Data = ((object)dataModel)?.EnsureEnumerable();
-
-
             string renderedContent = "";
-            if (dataResponse?.Data != null)
+            if (dataResponse != null)
             {
-                foreach (var item in dataResponse?.Data?.EnsureEnumerable())
+                foreach (var item in dataResponse?.EnsureEnumerable())
                 {
-                    IEnumerable<dynamic> subDataModel =
-                        ((object)item).EnsureEnumerable();
-                    if (dataModel != null)
-                        subDataModel = subDataModel
-                        .Union(((object)dataModel).EnsureEnumerable());
+                    // todo: replace with markers from regex, failover to 
+                    // subDataModelContainer markers
+                    DataModelContainer subDataModelContainer = new DataModelContainer
+                    {
+                        OpeningMarker = nextOpenMarker,
+                        ClosingMarker = nextCloseMarker,
+                        Data = ((object)item)?.EnsureEnumerable()
+                    };
+
+                    if (dataModelContainer?.Data != null)
+                        subDataModelContainer.Data
+                            = ((IEnumerable<object>)subDataModelContainer.Data)
+                            .Union(((object)dataModelContainer.Data)
+                            .EnsureEnumerable());
 
                     // content is the template with vars that gets filled with different
                     // data model and the fill result gets accumulated in filledContent
                     var filledContent = content.Fill(
-                        subDataModel,
-                        dataResponse.OpeningMarker ?? openingMarker,
-                        dataResponse.ClosingMarker ?? closingMarker,
-                        dataResponse.NullReplacement ?? nullReplacement
+                        subDataModelContainer.Data,
+                        subDataModelContainer.OpeningMarker,
+                        subDataModelContainer.ClosingMarker,
+                        subDataModelContainer.NullReplacement
                         );
 
                     // retrieve sub-templates recursively from current recursive level 
@@ -236,24 +310,21 @@ namespace Com.H.Text.Template
                         filledContent, TemplateTagRegex).Cast<Match>())
                     {
                         var subUri = templateTagMatch.Groups["content"]?.Value;
-                        if (subUri?.Contains("{uri{current}}") == true)
-                            subUri = subUri.Replace("{uri{current}}", uri.GetParentUri().AbsoluteUri);
+                        // todo: replace {uri{./}} placeholder with functioning uri traversal logic
+                        if (subUri?.Contains("{uri{./}}") == true
+                            || subUri?.Contains("{uri{.}}") == true
+                            )
+                            subUri = subUri
+                                .Replace("{uri{./}}", uri.GetParentUri().AbsoluteUri + "/")
+                                .Replace("{uri{.}}", uri.GetParentUri().AbsoluteUri.RemoveLast(1));
 
                         if (!string.IsNullOrWhiteSpace(subUri)
                             ||
                             Uri.IsWellFormedUriString(subUri, UriKind.Absolute)
                             )
                         {
-                            //IEnumerable<dynamic> subDataModel =
-                            //    ((object)item).EnsureEnumerable();
-                            //if (dataModel!=null)
-                            //        subDataModel
-                            //        .Union(((object) dataModel).EnsureEnumerable());
                             var subTemplateContent = new Uri(subUri).RenderContent(
-                                (object)subDataModel,
-                                dataResponse.OpeningMarker ?? openingMarker,
-                                dataResponse.ClosingMarker ?? closingMarker,
-                                dataResponse.NullReplacement ?? nullReplacement,
+                                subDataModelContainer,
                                 dataProviders,
                                 token,
                                 // todo: optional grab of referrer from regex sub-template tag
@@ -272,26 +343,28 @@ namespace Com.H.Text.Template
             }
             else
             {
-                if (dataModel != null) content = content.Fill(
-                    (object)dataModel, openingMarker,
-                    closingMarker, nullReplacement);
+                if (dataModelContainer?.Data != null) content = content.Fill(
+                    dataModelContainer.Data, dataModelContainer.OpeningMarker,
+                    dataModelContainer.ClosingMarker, dataModelContainer.NullReplacement);
                 foreach (var templateTagMatch in Regex.Matches(
                     content, TemplateTagRegex).Cast<Match>())
                 {
                     var subUri = templateTagMatch.Groups["content"]?.Value;
                     // fill placeholder for current uri
-                    if (subUri?.Contains("{uri{current}}") == true)
-                        subUri = subUri.Replace("{uri{current}}", uri.GetParentUri().AbsoluteUri);
+                    if (subUri?.Contains("{uri{./}}") == true
+                        || subUri?.Contains("{uri{.}}") == true
+                        )
+                        subUri = subUri
+                            .Replace("{uri{./}}", uri.GetParentUri().AbsoluteUri)
+                            .Replace("{uri{.}}", uri.GetParentUri().AbsoluteUri.RemoveLast(1));
+
                     if (!string.IsNullOrWhiteSpace(subUri)
                         ||
                         Uri.IsWellFormedUriString(subUri, UriKind.Absolute)
                         )
                     {
                         var subTemplateContent = new Uri(subUri).RenderContent(
-                            (object)dataModel,
-                            openingMarker,
-                            closingMarker,
-                            nullReplacement,
+                            dataModelContainer,
                             dataProviders,
                             token,
                             // todo: optional grab of referrer from regex sub-template tag
@@ -312,7 +385,6 @@ namespace Com.H.Text.Template
             return renderedContent;
 
         }
-
 
     }
 }

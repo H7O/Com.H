@@ -15,8 +15,4 @@
     <AssemblyVersion>0.0.9.0</AssemblyVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
-
 </Project>

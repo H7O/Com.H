@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Com.H.Text;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -75,6 +76,19 @@ namespace Com.H.Net
                 return new Uri(uriPath.Substring(0, lastIndexOfSeperator + 1), UriKind.Absolute);
             return new Uri(uri.AbsoluteUri, UriKind.Absolute);
         }
+
+        //public static string GetParentUriString(this string uriStr)
+        //{
+        //    if (string.IsNullOrWhiteSpace(uriStr)) return null;
+        //    uriStr = uriStr.EndsWith("/") ?
+        //        uriStr.RemoveLast(1): uriStr;
+            
+        //    var lastIndexOfSeperator = uriStr.LastIndexOf("/");
+        //    if (lastIndexOfSeperator > -1)
+        //        return uriStr.Substring(0, lastIndexOfSeperator + 1);
+        //    return uriStr;
+
+        //}
 
     }
 }

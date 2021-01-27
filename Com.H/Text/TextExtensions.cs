@@ -391,7 +391,9 @@ namespace Com.H.Text
             return Regex.Replace(text, openingMarker + @"(?<param>.*?)?" + closingMarker, nullValueReplacement??"");
         }
 
-
+        public static string RemoveLast(this string src, int? charCount = null)
+            => (charCount == null || src == null || src.Length<1)?src
+                : src.Remove(src.Length - (int)charCount);
 
     }
 }

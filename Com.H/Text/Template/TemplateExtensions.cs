@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 
-namespace Com.H.Text2.Template
+namespace Com.H.Text.Template
 {
     // note: fully working beta state (rough draft), requires heavy refactoring and optimization before final release
     public class TemplateDataRequest
@@ -162,19 +162,6 @@ namespace Com.H.Text2.Template
                 userAgent
                 );
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

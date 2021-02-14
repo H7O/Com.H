@@ -24,6 +24,7 @@ namespace Com.H.Text.Template
         public CancellationToken? CancellationToken { get; set; }
         public string OpenMarker { get; set; }
         public string CloseMarker { get; set; }
+        public string NullReplacement { get; set; }
     }
 
     public class DataModelContainer
@@ -34,11 +35,7 @@ namespace Com.H.Text.Template
         public object Data { get; set; }
 
     }
-    //public class TemplateDataResponse
-    //{
-    //    public IEnumerable<dynamic> Data { get; set; }
-    //    // todo: custom begin and end markers
-    //}
+
     public static class TemplateExtensions
     {
         // depreciated - original without escape characters
@@ -165,6 +162,19 @@ namespace Com.H.Text.Template
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
         public static string RenderContent(
         this Uri uri,
         DataModelContainer dataModelContainer = null,
@@ -211,6 +221,7 @@ namespace Com.H.Text.Template
             IEnumerable<dynamic> dataResponse = null;
             var nextOpenMarker = dataModelContainer?.OpeningMarker;
             var nextCloseMarker = dataModelContainer?.ClosingMarker;
+            var nextNullValue = dataModelContainer?.NullReplacement;
 
             if (dataProviders != null)
             {
@@ -244,6 +255,7 @@ namespace Com.H.Text.Template
                         dataRequestMatch.GetAttrib("open-marker") ?? nextOpenMarker;
                     nextCloseMarker =
                        dataRequestMatch.GetAttrib("close-marker") ?? nextCloseMarker;
+                    nextNullValue = dataRequestMatch.GetAttrib("null-value") ?? nextNullValue;
 
                 }
             }
@@ -273,6 +285,7 @@ namespace Com.H.Text.Template
                     {
                         OpeningMarker = nextOpenMarker,
                         ClosingMarker = nextCloseMarker,
+                        NullReplacement = nextNullValue,
                         Data = ((object)item)?.EnsureEnumerable()
                     };
 

@@ -1,4 +1,5 @@
-﻿using Com.H.Linq;
+﻿using Com.H.Data;
+using Com.H.Linq;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -338,6 +339,62 @@ namespace Com.H.Text
               closingMarker,
               nullValueReplacement
               );
+        }
+
+        public static string Fill(
+            this string src,
+            IEnumerable<QueryParams> queryParams
+            )
+        {
+            if (queryParams?.Any() == false || string.IsNullOrEmpty(src)) return src;
+
+            Dictionary<string, int> varNameCount = new Dictionary<string, int>();
+
+            var paramList = queryParams
+                .SelectMany(x =>
+                {
+                    var dicParams = x.DataModel?.GetDataModelParameters();
+                    return Regex.Matches(src, x.OpenMarker + QueryParams.RegexPattern + x.CloseMarker)
+                        .Cast<Match>()
+                        .Select(x => x.Groups["param"].Value)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct()
+                        .Select(varName => new
+                        {
+                            VarName = varName,
+                            NestedParamName =
+                            $"@vxv_{(varNameCount.ContainsKey(varName) ? ++varNameCount[varName] : varNameCount[varName] = 1) }_{varName}"
+                            ,
+                            OpenMarker = x.OpenMarker,
+                            CloseMarker = x.CloseMarker,
+                            NullReplacement = x.NullReplacement,
+                            Value = dicParams?.ContainsKey(varName) == true ? dicParams[varName] : null
+                        });
+                }).ToList();
+
+            if (paramList.Count > 0)
+            {
+                foreach (var item in paramList)
+                {
+                    if (item.Value == null) src = src
+                        .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
+                            item.NullReplacement, true,
+                            CultureInfo.InstalledUICulture);
+                    else
+                    {
+                        src = src
+                        .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
+                        item.Value.ToString(), true,
+                            CultureInfo.InvariantCulture);
+                    }
+                }
+
+            }
+
+            return src;
+
+
+
         }
 
 

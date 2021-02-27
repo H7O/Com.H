@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace Com.H.Data
 {
+
+    public class QueryParams
+    {
+        public object DataModel { get; set; }
+        public string OpenMarker { get; set; } = "{{";
+        public string CloseMarker { get; set; } = "}}";
+        public string NullReplacement { get; set; } = "null";
+        public static string RegexPattern { get; set; } = @"(?<param>.*?)?";
+    }
     public static class DataExtensions
     {
         public static IDictionary<string, object> GetDataModelParameters(this object dataModel, bool descending = false)

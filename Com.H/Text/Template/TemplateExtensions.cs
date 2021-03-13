@@ -183,7 +183,10 @@ namespace Com.H.Text.Template
 
 
 
-
+        private static string FillDates(this string content)
+            =>content.FillDate(DateTime.Now, "{now{")
+                .FillDate(DateTime.Today.AddDays(1), "{tomorrow{");
+        
 
 
         public static string RenderContent(
@@ -207,6 +210,7 @@ namespace Com.H.Text.Template
                     dataModelContainer.OpenMarker,
                     dataModelContainer.CloseMarker,
                     dataModelContainer.NullReplacement)
+                    .FillDates()
                     , UriKind.Absolute);
             }
             if (!Uri.IsWellFormedUriString(uri.AbsoluteUri, UriKind.Absolute))
@@ -222,7 +226,7 @@ namespace Com.H.Text.Template
                     $"Uri retrieval timed-out for {uri.AbsoluteUri}");
 
             if (content == null) return null;
-
+            content = content.FillDates();
             #endregion
 
 
@@ -447,7 +451,7 @@ namespace Com.H.Text.Template
                     $"Uri retrieval timed-out for {uri.AbsoluteUri}");
 
             if (content == null) return null;
-
+            content = content.FillDates();
             #endregion
 
 

@@ -350,7 +350,7 @@ namespace Com.H.Text
 
             Dictionary<string, int> varNameCount = new Dictionary<string, int>();
 
-            var paramList = queryParams
+            var paramList = queryParams.Reverse()
                 .SelectMany(x =>
                 {
                     var dicParams = x.DataModel?.GetDataModelParameters();

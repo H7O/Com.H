@@ -159,5 +159,15 @@ namespace Com.H.IO
             yield break;
         }
 
+        //public static string GetCurrentDirectory()
+        //{
+        //    #if ASPNETCORE50
+        //    // return AppDomain.CurrentDomain.BaseDirectory
+        //        return Directory.GetCurrentDirectory();
+        //    #else
+        //        return  Environment.CurrentDirectory;
+        //    #endif
+        //}
+
     }
 }

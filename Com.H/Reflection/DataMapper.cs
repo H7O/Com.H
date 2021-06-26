@@ -15,7 +15,7 @@ namespace Com.H.Reflection
     public class DataMapper
     {
         private readonly ConcurrentDictionary<Type, (string Name, PropertyInfo Info)[]> _typesProperties =
-            new ConcurrentDictionary<Type, (string Name, PropertyInfo PInfo)[]>();
+            new();
 
 
         public (string Name, PropertyInfo Info)[] GetCachedProperties(Type type)

@@ -159,6 +159,21 @@ namespace Com.H.IO
             yield break;
         }
 
+        public static string UnifyPathSeperator(this string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)
+                ) return path;
+            var oldPath = path;
+            // string pathSeperator = Path.DirectorySeparatorChar + "";
+            //string altSeperator = pathSeperator.Equals("/") ? "\\" : "/";
+            path = path.Replace(Path.AltDirectorySeparatorChar, 
+                Path.DirectorySeparatorChar)
+                .Replace("" + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar,
+                Path.DirectorySeparatorChar + "");
+            if (!oldPath.Equals(path)) return UnifyPathSeperator(path);
+            return path;
+        }
+
         //public static string GetCurrentDirectory()
         //{
         //    #if ASPNETCORE50

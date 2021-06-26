@@ -21,7 +21,7 @@ namespace Com.H.Data
         public static IDictionary<string, object> GetDataModelParameters(this object dataModel, bool descending = false)
         {
             if (dataModel == null) return null;
-            Dictionary<string, object> result = new Dictionary<string, object>();
+            Dictionary<string, object> result = new();
             foreach (var item in dataModel.EnsureEnumerable())
             {
                 if (item == null) continue;

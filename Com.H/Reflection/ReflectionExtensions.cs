@@ -10,7 +10,7 @@ namespace Com.H.Reflection
 {
     public static class ReflectionExtensions
     {
-        private static readonly DataMapper _mapper = new DataMapper();
+        private static readonly DataMapper _mapper = new();
 
         public static (string Name, PropertyInfo Info)[] GetCachedProperties(this Type type)
             => _mapper.GetCachedProperties(type);

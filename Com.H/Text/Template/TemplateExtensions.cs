@@ -163,26 +163,6 @@ namespace Com.H.Text.Template
         }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         private static string FillDates(this string content)
             =>content.FillDate(DateTime.Now, "{now{")
                 .FillDate(DateTime.Today.AddDays(1), "{tomorrow{");
@@ -217,7 +197,7 @@ namespace Com.H.Text.Template
                 throw new FormatException(
                     $"Invalid uri format : {uri.AbsoluteUri}");
 
-            string content = null;
+            string content;
             if ((content = uri
                 .GetContentAsync(token,
                 referrer, userAgent)
@@ -296,7 +276,7 @@ namespace Com.H.Text.Template
                 {
                     // todo: replace with markers from regex, failover to 
                     // subDataModelContainer markers
-                    QueryParams subDataModelContainer = new QueryParams
+                    QueryParams subDataModelContainer = new()
                     {
                         OpenMarker = nextOpenMarker,
                         CloseMarker = nextCloseMarker,
@@ -442,7 +422,7 @@ namespace Com.H.Text.Template
                 throw new FormatException(
                     $"Invalid uri format : {uri.AbsoluteUri}");
 
-            string content = null;
+            string content;
             if ((content = uri
                 .GetContentAsync(token,
                 referrer, userAgent)
@@ -460,7 +440,7 @@ namespace Com.H.Text.Template
 
             IEnumerable<dynamic> dataResponse = null;
 
-            QueryParams newQueryParams = new QueryParams();
+            QueryParams newQueryParams = new();
 
             //var nextOpenMarker = queryParamsList?.OpenMarker;
             //var nextCloseMarker = queryParamsList?.CloseMarker;
@@ -489,10 +469,9 @@ namespace Com.H.Text.Template
                     //req.ConnectionString = dataRequestMatch?.GetAttrib("connection-string");
                     //req.ContentType = dataRequestMatch.GetAttrib("content-type");
 
-                    bool preRender = false;
 
-                    bool.TryParse((dataRequestMatch
-                        .GetAttrib("pre-render") ?? "false"), out preRender);
+                    _ = bool.TryParse((dataRequestMatch
+                        .GetAttrib("pre-render") ?? "false"), out bool preRender);
 
                     dataResponse = dataProviders(new()
                     {

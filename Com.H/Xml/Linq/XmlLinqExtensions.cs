@@ -29,9 +29,9 @@ namespace Com.H.Xml.Linq
             if (keepRoot == false)
                 return xElement.Elements().Select(x => AsDynamic(x, true)).ToList();
 
-            ExpandoObject obj = new ExpandoObject();
+            ExpandoObject obj = new();
 
-            Dictionary<string, List<string>> properties = new Dictionary<string, List<string>>();
+            Dictionary<string, List<string>> properties = new();
             void AddProperty(string key, string value)
             {
                 if (properties.ContainsKey(key))

@@ -170,7 +170,7 @@ namespace Com.H.Threading
             else
                 this.Cts = CancellationTokenSource
                     .CreateLinkedTokenSource((CancellationToken)cToken);
-            Task cleanupMonitoring = new Task(() =>
+            Task cleanupMonitoring = new(() =>
             {
                 while (!this.Cts.Token.IsCancellationRequested)
                 {

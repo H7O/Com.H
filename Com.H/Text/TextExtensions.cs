@@ -316,7 +316,7 @@ namespace Com.H.Text
         {
             if (dataModel == null) return src;
             
-            List<IDictionary<string, object>> parameters = new List<IDictionary<string, object>>();
+            List<IDictionary<string, object>> parameters = new();
 
             foreach (var item in dataModel.EnsureEnumerable())
             {
@@ -348,7 +348,7 @@ namespace Com.H.Text
         {
             if (queryParams?.Any() == false || string.IsNullOrEmpty(src)) return src;
 
-            Dictionary<string, int> varNameCount = new Dictionary<string, int>();
+            Dictionary<string, int> varNameCount = new();
 
             var paramList = queryParams.Reverse()
                 .SelectMany(x =>
@@ -365,9 +365,9 @@ namespace Com.H.Text
                             NestedParamName =
                             $"@vxv_{(varNameCount.ContainsKey(varName) ? ++varNameCount[varName] : varNameCount[varName] = 1) }_{varName}"
                             ,
-                            OpenMarker = x.OpenMarker,
-                            CloseMarker = x.CloseMarker,
-                            NullReplacement = x.NullReplacement,
+                            x.OpenMarker,
+                            x.CloseMarker,
+                            x.NullReplacement,
                             Value = dicParams?.ContainsKey(varName) == true ? dicParams[varName] : null
                         });
                 }).ToList();

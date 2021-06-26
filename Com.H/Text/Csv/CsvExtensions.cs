@@ -37,7 +37,7 @@ namespace Com.H.Text.Csv
 
             return rows.Select(r =>
             {
-                System.Dynamic.ExpandoObject exObj = new ExpandoObject();
+                System.Dynamic.ExpandoObject exObj = new();
                 foreach (var item in r.Zip(headers, (c, h) => new { c, h }))
                     exObj.TryAdd(item.h, item.c);
                 return (dynamic)exObj;

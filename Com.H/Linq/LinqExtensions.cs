@@ -44,5 +44,28 @@ namespace Com.H.Linq
         public static IEnumerable<dynamic> EnsureEnumerable(this object obj)
              => EnsureEnumerable<dynamic>(obj);
 
+        /// <summary>
+        /// Find and return an item within a hierarchical tree structure by traversing it's child elements using a string
+        /// path that denotes its tree elements seperated by a pre-defined string delimiter.
+        /// </summary>
+        /// <typeparam name="T">Traversable object</typeparam>
+        /// <param name="traversableItem">An item that carries children of the same type as itself</param>
+        /// <param name="path">A string path representing the decendants tree seperated by a delimiter</param>
+        /// <param name="findChild">A delegate that takes a parent element and tries to find a direct decendant wihin its children that corresponds to the child path sub-string</param>
+        /// <param name="pathDelimiter">A delimieter string to be used to distinguish between decendant elements in the path string</param>
+        /// <returns></returns>
+        public static T TravGetItem<T>(this T traversableItem,
+            string path,
+            Func<T, string, T> findChild,
+            string pathDelimiter = "/") => string.IsNullOrEmpty(path) ? default
+            : path.Split(new string[] { pathDelimiter },
+                StringSplitOptions.RemoveEmptyEntries)
+                .Aggregate(default(T), (i, n) =>
+                    EqualityComparer<T>.Default.Equals(findChild(i, n), default) ?
+                    findChild(traversableItem, n)
+                    : TravGetItem(i, n, findChild, pathDelimiter)
+                );
+
+
     }
 }

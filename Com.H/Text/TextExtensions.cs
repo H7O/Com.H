@@ -103,6 +103,13 @@ namespace Com.H.Text
                 .Distinct().OrderBy(x => x);
 
 
+        public static string ExtractAlphabet(this string text)
+            => Regex.Matches(text, "[a-z]+", RegexOptions.IgnoreCase)
+            .Cast<Match>()
+                .Aggregate("", (i, n) => i + n.Value);
+        
+
+
         private static bool? IsNullEqual(
             this string originalString,
             string stringToCompare)

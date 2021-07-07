@@ -63,6 +63,18 @@ namespace Com.H.Reflection
         }
 
 
+        public static object GetDefault(this Type type)
+            // concept taken from : https://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype
+            //=> ((Func<object>) GetDefault<object>).Method.GetGenericMethodDefinition()
+            //.MakeGenericMethod(type).Invoke(null, null);
+            => ((Func<object>)GetDefault<object>).Method.GetGenericMethodDefinition()
+            .MakeGenericMethod(type).Invoke(null, null);
+
+        private static T GetDefault<T>()
+            => default;
+        
+
+
         //public static object GetDefault(this Type type)
         //{
         //    // taken from : https://stackoverflow.com/questions/2490244/default-value-of-a-type-at-runtime

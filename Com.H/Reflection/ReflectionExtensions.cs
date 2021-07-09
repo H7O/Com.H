@@ -65,39 +65,21 @@ namespace Com.H.Reflection
 
         public static object GetDefault(this Type type)
             // concept taken from : https://stackoverflow.com/questions/325426/programmatic-equivalent-of-defaulttype
-            //=> ((Func<object>) GetDefault<object>).Method.GetGenericMethodDefinition()
-            //.MakeGenericMethod(type).Invoke(null, null);
             => ((Func<object>)GetDefault<object>).Method.GetGenericMethodDefinition()
             .MakeGenericMethod(type).Invoke(null, null);
 
         private static T GetDefault<T>()
             => default;
-        
 
 
-        //public static object GetDefault(this Type type)
-        //{
-        //    // taken from : https://stackoverflow.com/questions/2490244/default-value-of-a-type-at-runtime
-        //    // If no Type was supplied, if the Type was a reference type, or if the Type was a System.Void, return null
-        //    if (type == null || !type.IsValueType || type == typeof(void)
-        //        ||
-        //        type.ContainsGenericParameters
-        //        )
-        //        return null;
+        public static object ConvertTo(this object obj, Type type)
+        {
+            Type dstType = Nullable.GetUnderlyingType(type) ?? type;
+            return (obj == null || DBNull.Value.Equals(obj)) ?
+               type.GetDefault() : Convert.ChangeType(obj, dstType);
+        }
 
-        //    // If the Type is a primitive type, or if it is another publicly-visible value type (i.e. struct/enum), return a 
-        //    //  default instance of the value type
-        //    if (type.IsPrimitive || !type.IsNotPublic)
-        //    {
-        //        try
-        //        {
-        //            return Activator.CreateInstance(type);
-        //        }
-        //        catch {}
-        //    }
-        //    return null;
 
-        //}
 
     }
 }

@@ -63,7 +63,8 @@ namespace Com.H.Threading
                         //        Thread.CurrentThread.Abort();
                         //}
                         //catch { }
-                    }))
+                    }
+                    ))
                     action();
                 }, token).GetAwaiter().GetResult();
             }

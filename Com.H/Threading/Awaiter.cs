@@ -16,11 +16,11 @@ namespace Com.H.Threading
     /// Awaiter a = new Awaiter();
     /// 
     /// Thread 1:
-    /// await a.WaitFor("abc");
+    /// await a.WaitFor("lock 1");
     /// // logic after waiting
     /// 
     /// Thread 2:
-    /// a.Unlock("abc");
+    /// a.Unlock("lock 1");
     /// // ^ causes Thread 1 to resume
     /// 
     /// e.g. 2
@@ -28,15 +28,15 @@ namespace Com.H.Threading
     /// Awaiter a = new Awaiter();
     /// 
     /// Thread 1:
-    /// await a.WaitFor(new string[] {"abc", "efg"});
+    /// await a.WaitFor(new string[] {"lock 1", "lock 2"});
     /// // logic after waiting
     /// 
     /// Thread 2:
-    /// a.Unlock("abc");
+    /// a.Unlock("lock 1");
     /// // ^ causes lock 1 to be released
     /// 
     /// Thread 3:
-    /// a.Unlock("efg");
+    /// a.Unlock("lock 2");
     /// // ^ causes lock 2 to be released, which causes Thread 1 to resume
     /// </summary>
     public class Awaiter

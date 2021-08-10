@@ -47,11 +47,6 @@ namespace Com.H.Cache
                 this.cacheItems.TryRemove(item.Key, out _);
         }
 
-        //public T Get<T>(object key, Func<T> getValue, TimeSpan? timeSpan = null)
-        //    => (T)this.Get(key, getValue, timeSpan);
-
-
-
 
     }
 }

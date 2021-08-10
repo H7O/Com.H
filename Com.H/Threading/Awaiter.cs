@@ -37,7 +37,7 @@ namespace Com.H.Threading
     /// 
     /// Thread 3:
     /// a.Unlock("lock 2");
-    /// // ^ causes lock 2 to be released, which causes Thread 1 to resume
+    /// // ^ causes lock 2 to be released, which causes Thread 1 to resume 
     /// </summary>
     public class Awaiter : IDisposable
     {

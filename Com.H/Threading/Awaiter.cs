@@ -41,6 +41,16 @@ namespace Com.H.Threading
     /// </summary>
     public class Awaiter : IDisposable
     {
+        private readonly CancellationToken? _cToken;
+        private readonly TimeSpan? _delay;
+
+
+        public Awaiter(CancellationToken? cToken = null)
+            => this._cToken = cToken;
+
+        public Awaiter(TimeSpan delay, CancellationToken? cToken = null) 
+            => (this._delay, this._cToken) = (delay, cToken);
+
 
         private readonly ConcurrentDictionary<object, CancellationTokenSource> waitList = new();
         private bool disposedValue;
@@ -69,14 +79,14 @@ namespace Com.H.Threading
             if (typeof(IEnumerable<object>).IsAssignableFrom(lockObj.GetType()))
             {
                 await Task.WhenAll(((IEnumerable<object>)lockObj)
-                    .Select(async x => await WaitFor(x, delay, cToken)));
+                    .Select(async x => await WaitFor(x, delay ?? this._delay, cToken ?? this._cToken)));
                 return;
             }
 
             var cts = this.waitList.GetOrAdd(lockObj, _ =>
             {
-                return (cToken == null ? new CancellationTokenSource()
-                : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)cToken));
+                return ((cToken??this._cToken) == null ? new CancellationTokenSource()
+                : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)(cToken ?? this._cToken)));
             });
 
             if (cts.IsCancellationRequested) return;

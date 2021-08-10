@@ -39,11 +39,11 @@ namespace Com.H.Threading
     /// a.Unlock("lock 2");
     /// // ^ causes lock 2 to be released, which causes Thread 1 to resume
     /// </summary>
-    public class Awaiter
+    public class Awaiter : IDisposable
     {
 
         private readonly ConcurrentDictionary<object, CancellationTokenSource> waitList = new();
-
+        private bool disposedValue;
 
         public void Unlock(object lockObj)
         {
@@ -86,6 +86,42 @@ namespace Com.H.Threading
             }
             catch (TaskCanceledException)
             { }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (var lockObj in this.waitList?.Values)
+                    {
+                        try
+                        {
+                            this.Unlock(lockObj);
+                        }
+                        catch { }
+                    }
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposedValue = true;
+            }
+        }
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~Awaiter()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

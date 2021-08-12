@@ -80,6 +80,9 @@ namespace Com.H.Threading
             catch (ThreadAbortException)
             {
             }
+            catch(ThreadInterruptedException)
+            {
+            }
             catch
             {
                 throw;
@@ -127,6 +130,10 @@ namespace Com.H.Threading
             catch (ThreadAbortException)
             {
             }
+            catch (ThreadInterruptedException)
+            {
+            }
+
             catch
             {
                 throw;
@@ -170,6 +177,9 @@ namespace Com.H.Threading
                     {
                     }
                     catch (ThreadAbortException)
+                    {
+                    }
+                    catch (ThreadInterruptedException)
                     {
                     }
                     catch
@@ -222,6 +232,10 @@ namespace Com.H.Threading
                     catch (ThreadAbortException)
                     {
                     }
+                    catch (ThreadInterruptedException)
+                    { 
+                    }
+
                     catch
                     {
                         throw;

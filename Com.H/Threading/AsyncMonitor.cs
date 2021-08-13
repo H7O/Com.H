@@ -12,7 +12,7 @@ namespace Com.H.Threading
             public CancellationTokenSource Cts { get; set; }
             public AtomicGate Gate { get; set; }
         }
-        private readonly ConcurrentDictionary<object, MonitorItem> waitList = new();
+        private readonly ConcurrentDictionary<object, Lazy<MonitorItem>> waitList = new();
         /// <summary>
         /// Asynchronous version of Monitor.Enter(lockObj, timeout)
         /// </summary>
@@ -31,22 +31,27 @@ namespace Com.H.Threading
                     (
                         successfullyEntered = (mItem = waitList
                         .AddOrUpdate(lockObj,
-                            _ => new MonitorItem()
+                            _ => new Lazy<MonitorItem>(()=>
+                            new MonitorItem()
                             {
                                 Cts = (cToken == null ? new CancellationTokenSource()
                                     : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)cToken)),
                                 Gate = new AtomicGate()
-                            }
-                            , (_, oldMItem) =>
+                            })
+                            , (_, lazyOldMItem) =>
                             {
+                                var oldMItem = lazyOldMItem.Value;
                                 if (oldMItem?.Cts?.IsCancellationRequested != true)
-                                    return oldMItem;
-                                oldMItem.Cts = (cToken == null ? new CancellationTokenSource()
-                                : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)cToken));
-                                oldMItem.Gate.TryClose();
-                                return oldMItem;
+                                    return lazyOldMItem;
+                                return new Lazy<MonitorItem>(() =>
+                                   {
+                                       oldMItem.Cts = (cToken == null ? new CancellationTokenSource()
+                                       : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)cToken));
+                                       oldMItem.Gate.TryClose();
+                                       return oldMItem;
+                                   });
                             }
-                            )
+                            ).Value
                     )
                     .Gate.TryOpen()) ? TimeSpan.Zero : timeout ?? Timeout.InfiniteTimeSpan,
                     mItem.Cts.Token);
@@ -63,13 +68,15 @@ namespace Com.H.Threading
         /// <param name="lockObj">The lock object</param>
         public void Exit(object lockObj)
         {
-            _ = waitList.AddOrUpdate(lockObj,
-                            _ => new MonitorItem() { Cts = new CancellationTokenSource(), Gate = new AtomicGate() },
-                            (_, oldMItem) =>
-                            {
-                                oldMItem.Cts.Cancel();
-                                return oldMItem;
-                            });
+            this.waitList.TryGetValue(lockObj, out var lazyValue);
+            lazyValue?.Value?.Cts?.Cancel();
+            //_ = waitList.AddOrUpdate(lockObj,
+            //                _ => new Lazy<MonitorItem>(()=>new MonitorItem() { Cts = new CancellationTokenSource(), Gate = new AtomicGate() }),
+            //                (_, lazyOldMItem) =>
+            //                {
+            //                    oldMItem.Cts.Cancel();
+            //                    return oldMItem;
+            //                });
         }
 
     }

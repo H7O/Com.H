@@ -52,13 +52,13 @@ namespace Com.H.Threading
             => (this._delay, this._cToken) = (delay, cToken);
 
 
-        private readonly ConcurrentDictionary<object, CancellationTokenSource> waitList = new();
+        private readonly ConcurrentDictionary<object, Lazy<CancellationTokenSource>> waitList = new();
         private bool disposedValue;
 
         public void Unlock(object lockObj)
         {
-            if (this.waitList.TryGetValue(lockObj, out CancellationTokenSource cts))
-                cts?.Cancel();
+            if (this.waitList.TryGetValue(lockObj, out Lazy<CancellationTokenSource> cts))
+                cts?.Value?.Cancel();
         }
 
 
@@ -90,14 +90,16 @@ namespace Com.H.Threading
 
             var cts = this.waitList.GetOrAdd(lockObj, _ =>
             {
-                return ((cToken??this._cToken) == null ? new CancellationTokenSource()
-                : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)(cToken ?? this._cToken)));
+                return new Lazy<CancellationTokenSource>( 
+                    ((cToken??this._cToken) == null ? new CancellationTokenSource()
+                : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)(cToken ?? this._cToken)))
+                );
             });
 
-            if (cts.IsCancellationRequested) return;
+            if (cts.Value.IsCancellationRequested) return;
             try
             {
-                await Task.Delay(delay ?? Timeout.InfiniteTimeSpan, cts.Token);
+                await Task.Delay(delay ?? Timeout.InfiniteTimeSpan, cts.Value.Token);
             }
             catch (TaskCanceledException)
             { }

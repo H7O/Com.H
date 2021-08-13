@@ -22,28 +22,32 @@ namespace Com.H.Cache
             }
 
         }
-        private readonly ConcurrentDictionary<object, CacheItem> cacheItems = new();
+        private readonly ConcurrentDictionary<object, Lazy<CacheItem>> cacheItems = new();
 
         public T Get<T>(object key, Func<T> getValue, TimeSpan? timeSpan = null)
             => (T)this.cacheItems.AddOrUpdate(key,
-                _ => new CacheItem()
+                _ => new Lazy<CacheItem>(()=> new CacheItem()
                 {
                     ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
                     : DateTime.Now.Add((TimeSpan)timeSpan)),
                     Value = getValue == null ? default : getValue()
-                },
-                (_, oldValue) =>
+                }),
+                (_, oldLazyValue) =>
                 {
-                    if (!oldValue.Expired) return oldValue;
-                    oldValue.Value = getValue == null ? default : getValue();
-                    oldValue.ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
-                     : DateTime.Now.Add((TimeSpan)timeSpan));
-                    return oldValue;
-                }).Value;
+                    var oldValue = oldLazyValue.Value;
+                    if (!oldValue.Expired) return oldLazyValue;
+                    return new Lazy<CacheItem>(() =>
+                    {
+                        oldValue.Value = getValue == null ? default : getValue();
+                        oldValue.ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
+                         : DateTime.Now.Add((TimeSpan)timeSpan));
+                        return oldValue;
+                    });
+                }).Value.Value;
 
         public void ClearExpired()
         {
-            foreach (var item in this.cacheItems.Where(x => x.Value.Expired))
+            foreach (var item in this.cacheItems.Where(x => x.Value.Value.Expired))
                 this.cacheItems.TryRemove(item.Key, out _);
         }
 

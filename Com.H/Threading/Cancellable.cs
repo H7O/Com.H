@@ -41,9 +41,10 @@ namespace Com.H.Threading
                 && delayTask.IsCompleted
                 ) actionOnTimeout();
         }
-        public static void CancellableRun(Action action, CancellationToken token)
+        public static void CancellableRun(Action action, CancellationToken token, TimeSpan? timeout = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
+            bool done = false;
             try
             {
                 Task.Run(() =>
@@ -52,6 +53,21 @@ namespace Com.H.Threading
                     {
                         try
                         {
+
+                            if (!done && timeout != null)
+                            {
+                                DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
+                                while (DateTime.Now < expiry && !done)
+                                {
+                                    Task.Delay(500).GetAwaiter().GetResult();
+                                }
+
+                            }
+                            if (done)
+                            {
+                                return;
+                            }
+
                             Thread.CurrentThread.Interrupt();
                         }
                         catch { }
@@ -87,19 +103,40 @@ namespace Com.H.Threading
             {
                 throw;
             }
+            finally
+            {
+                done = true;
+            }
         }
 
-        public static T CancellableRun<T>(Func<T> func, CancellationToken token)
+        public static T CancellableRun<T>(Func<T> func, CancellationToken token, TimeSpan? timeout = null)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
+            bool done = false;
             try
             {
+                
                 return Task.Run<T>(() =>
                 {
                     using (var reg = token.Register(() =>
                     {
                         try
                         {
+
+                            if (!done && timeout != null)
+                            {
+                                DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
+                                while (DateTime.Now < expiry && !done)
+                                {
+                                    Task.Delay(500).GetAwaiter().GetResult();
+                                }
+
+                            }
+                            if (done)
+                            {
+                                return;
+                            }
+
                             Thread.CurrentThread.Interrupt();
                         }
                         catch { }
@@ -138,18 +175,37 @@ namespace Com.H.Threading
             {
                 throw;
             }
+            finally
+            {
+                done = true;
+            }
 
             return default;
         }
-        public static Task CancellableRunAsync(Action action, CancellationToken token)
+        public static Task CancellableRunAsync(Action action, CancellationToken token, TimeSpan? timeout = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
+            bool done = false;
             var t = new Task(() =>
             {
                 using (var reg = token.Register(() =>
                 {
                     try
                     {
+
+                        if (!done && timeout != null)
+                        {
+                            DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
+                            while (DateTime.Now < expiry && !done)
+                            {
+                                Task.Delay(500).GetAwaiter().GetResult();
+                            }
+
+                        }
+                        if (done)
+                        {
+                            return;
+                        }
                         Thread.CurrentThread.Interrupt();
                     }
                     catch { }
@@ -186,6 +242,11 @@ namespace Com.H.Threading
                     {
                         throw;
                     }
+                    finally
+                    {
+                        done = true;
+                    }
+
 
             }, token);
 
@@ -194,15 +255,31 @@ namespace Com.H.Threading
             return t;
         }
 
-        public static Task<T> CancellableRunAsync<T>(Func<T> func, CancellationToken token)
+        public static Task<T> CancellableRunAsync<T>(Func<T> func, CancellationToken token, TimeSpan? timeout = null)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
+            bool done = false;
             var t = new Task<T>(() =>
             {
                 using (var reg = token.Register(() =>
                 {
                     try
                     {
+
+                        if (!done && timeout != null)
+                        {
+                            DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
+                            while (DateTime.Now < expiry && !done)
+                            {
+                                Task.Delay(500).GetAwaiter().GetResult();
+                            }
+
+                        }
+                        if (done)
+                        {
+                            return;
+                        }
+
                         Thread.CurrentThread.Interrupt();
                     }
                     catch { }
@@ -239,6 +316,10 @@ namespace Com.H.Threading
                     catch
                     {
                         throw;
+                    }
+                    finally
+                    {
+                        done = true;
                     }
                 return default;
 

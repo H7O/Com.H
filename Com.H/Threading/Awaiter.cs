@@ -67,6 +67,11 @@ namespace Com.H.Threading
 
 
 
+        public async Task WaitFor(object lockObj, CancellationToken cToken)
+        => await this.WaitFor(lockObj, null, cToken);
+        
+
+
         /// <summary>
         /// Wait for a complete call on a lock object or a group of lock objects (group of lock objects can be passed in IEnumerable of objects) 
         /// </summary>

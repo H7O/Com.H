@@ -65,6 +65,25 @@ namespace Com.H.Threading
         //private async Task WaitForE(IEnumerable<object> lockObjs, TimeSpan? delay, CancellationToken? cToken)
         //=> await Task.WhenAll(lockObjs.Select(async x => await WaitFor(x, delay, cToken)));
 
+        /// <summary>
+        /// True if the lockObj is still locked, false if it's unlocked or doesn't exist
+        /// </summary>
+        /// <param name="lockObj"></param>
+        /// <returns></returns>
+        public bool IsLocked(object lockObj)
+            => this.waitList.TryGetValue(lockObj, out var item)
+                && item?.Value?.IsCancellationRequested == false;
+
+        public bool AreAllLocked(IEnumerable<object> lockObjs)
+            => lockObjs.All(x => this.IsLocked(x));
+
+        public bool IsUnlocked(object lockObj)
+            => !this.IsLocked(lockObj);
+
+
+        public bool AreAllUnlocked(IEnumerable<object> lockObjs)
+            => lockObjs.All(x => this.IsUnlocked(x));
+
 
 
         public async Task WaitFor(object lockObj, CancellationToken cToken)

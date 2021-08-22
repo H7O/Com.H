@@ -13,6 +13,9 @@ namespace Com.H.Threading
             public AtomicGate Gate { get; set; }
         }
         private readonly ConcurrentDictionary<object, Lazy<MonitorItem>> waitList = new();
+
+        public async Task Enter(object lockOb, CancellationToken cToken)
+            => await this.Enter(lockOb, null, cToken);
         /// <summary>
         /// Asynchronous version of Monitor.Enter(lockObj, timeout)
         /// </summary>

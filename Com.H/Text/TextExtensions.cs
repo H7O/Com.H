@@ -227,7 +227,7 @@ namespace Com.H.Text
         /// <returns></returns>
         public static string FillDate(
             this string src,
-            DateTime? date,
+            DateTime? date = null,
             string openingMarker = "{date{",
             string closingMarker = "}}",
             string nullValueReplacement = null
@@ -244,7 +244,8 @@ namespace Com.H.Text
                     .Where(x => !string.IsNullOrEmpty(x))
                     .Select(x => x).Distinct()
                     .ToDictionary(k => k,
-                    v => date == null ? "" : (object)((DateTime)date).ToString(v)),
+                    v => date == null ? DateTime.Now.ToString(v) : 
+                    (object)((DateTime)date).ToString(v)),
                 openingMarker,
                 closingMarker,
                 nullValueReplacement

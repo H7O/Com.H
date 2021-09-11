@@ -21,7 +21,7 @@ namespace Com.H.Threading
         public DateTime? CacheUntil { get; set; }
     }
 
-    public class CachedRun : IDisposable
+    public class CachedRunDeprecated : IDisposable
     {
 
         #region properties
@@ -35,7 +35,7 @@ namespace Com.H.Threading
         #endregion
 
         #region constructor
-        public CachedRun()
+        public CachedRunDeprecated()
         {
             this.CachedItems = new ConcurrentDictionary<object, ICachedRunItem>();
             this.DefaultCacheUntil = DateTime.Today.AddDays(1);

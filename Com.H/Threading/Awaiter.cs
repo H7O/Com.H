@@ -78,7 +78,8 @@ namespace Com.H.Threading
             => lockObjs.All(x => this.IsLocked(x));
 
         public bool IsUnlocked(object lockObj)
-            => !this.IsLocked(lockObj);
+            => this.waitList.TryGetValue(lockObj, out var item)
+                && item?.Value?.IsCancellationRequested == true;
 
 
         public bool AreAllUnlocked(IEnumerable<object> lockObjs)

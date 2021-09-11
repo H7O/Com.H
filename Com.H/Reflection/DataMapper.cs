@@ -94,26 +94,41 @@ namespace Com.H.Reflection
 
             var srcProperties = this.GetCachedProperties(source.GetType());
             var dstProperties = this.GetCachedProperties(typeof(T));
+            // Console.WriteLine(dstProperties.Count());
 
             var joined = dstProperties.LeftJoin(
                 srcProperties,
                 dst => dst.Name.ToUpper(CultureInfo.InvariantCulture),
                 src => src.Name.ToUpper(CultureInfo.InvariantCulture),
                 (dst, src) => new { dst, src }
-            );
+            ).Where(x => x.src.Info != null);
+
+            // Console.WriteLine(joined.Count);
 
             T destination = Activator.CreateInstance<T>();
 
-            foreach (var item in joined.Where(x => x.src.Info != null))
+            foreach (var item in joined)
             {
                 try
                 {
-                    item.dst.Info.SetValue(destination,
-                        Convert.ChangeType(item.src.Info.GetValue(source),
-                        item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
-                    );
+                    // Console.WriteLine($"src: {item.src.Name} = {item.src.Info?.GetValue(source)}");
+                    var val = item.src.Info.GetValue(source);
+
+                    if (val is null) continue; 
+                    if (item.src.Info.PropertyType == item.dst.Info.PropertyType)
+                        item.dst.Info.SetValue(destination, val);
+                    else 
+                        item.dst.Info.SetValue(destination,
+                            Convert.ChangeType(val,
+                            item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
+                        );
+                    // Console.WriteLine($"dst: {item.dst.Name} = {item.dst.Info?.GetValue(source)}");
+
                 }
-                catch { }
+                catch // (Exception ex) 
+                {
+                    // Console.WriteLine("DataMapper: " + ex.Message);
+                }
             }
             return destination;
         }

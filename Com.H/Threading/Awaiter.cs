@@ -57,8 +57,13 @@ namespace Com.H.Threading
 
         public void Unlock(object lockObj)
         {
-            if (this.waitList.TryGetValue(lockObj, out Lazy<CancellationTokenSource> cts))
-                cts?.Value?.Cancel();
+            this.waitList.GetOrAdd(lockObj, _ =>
+            {
+                return new Lazy<CancellationTokenSource>
+                (
+                    new CancellationTokenSource()
+                );
+            }).Value?.Cancel();
         }
 
 

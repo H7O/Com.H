@@ -13,6 +13,12 @@ namespace Com.H.Collections.Concurrent
     {
         private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
 
+        public LazyConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
+        => this._dic = new ConcurrentDictionary<TKey, Lazy<TValue>>(
+            keyValuePairs.Select(x =>
+                    new KeyValuePair<TKey, Lazy<TValue>>(x.Key, new Lazy<TValue>(x.Value))
+            ));
+
         public TValue this[TKey key]
         {
             get

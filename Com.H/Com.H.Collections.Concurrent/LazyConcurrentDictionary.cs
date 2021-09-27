@@ -12,6 +12,8 @@ namespace Com.H.Collections.Concurrent
     public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
+        public LazyConcurrentDictionary()
+        { }
 
         public LazyConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
         => this._dic = new ConcurrentDictionary<TKey, Lazy<TValue>>(

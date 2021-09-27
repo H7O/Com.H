@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 
 namespace Com.H.Collections.Concurrent
 {
+    internal class InvalidLazyConcurrentUpdateException : Exception
+    {
+
+    }
     public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
         private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
@@ -45,38 +49,49 @@ namespace Com.H.Collections.Concurrent
         public int Count => this._dic.Count;
 
         public TValue AddOrUpdate(TKey key, TValue value, Func<TKey, TValue, TValue> updateValueFactory)
-        {
-            return this._dic.AddOrUpdate(
+            => this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(value),
                 (key, oldItem) => new Lazy<TValue>(() => updateValueFactory(key, oldItem.Value)))
                 .Value;
-        }
 
         public TValue AddOrUpdate(TKey key,
             Func<TKey, TValue> addValueFactory,
             Func<TKey, TValue, TValue> updateValueFactory)
-        {
-            return this._dic.AddOrUpdate(
+            => this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => addValueFactory(key)),
                 (key, oldItem) => new Lazy<TValue>(() => updateValueFactory(key, oldItem.Value)))
                 .Value;
-        }
 
         public TValue AddOrUpdate<TArg>(TKey key,
             Func<TKey, TArg, TValue> addValueFactory,
-            Func<TKey, TValue, TArg, TValue> updateFactory,
+            Func<TKey, TValue, TArg, TValue> updateValueFactory,
             TArg factoryArgument
-            )
-        {
-            return this._dic.AddOrUpdate(
+            ) =>
+            this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => addValueFactory(key, factoryArgument)),
-                (key, oldItem) => new Lazy<TValue>(() => updateFactory(key, oldItem.Value, factoryArgument)))
+                (key, oldItem) => new Lazy<TValue>(() => updateValueFactory(key, oldItem.Value, factoryArgument)))
                 .Value;
-        }
+        
 
+        public TValue Update(TKey key,
+            Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            try
+            {
+                var value = this.AddOrUpdate(key, 
+                    _ => throw new InvalidLazyConcurrentUpdateException(),
+                    (key, oldValue) => updateValueFactory(key, oldValue));
+                return value;
+            }
+            catch (InvalidLazyConcurrentUpdateException)
+            {
+                return default;
+            }
+        }
+            
         public bool ContainsKey(TKey key)
             =>
             this._dic.ContainsKey(key);

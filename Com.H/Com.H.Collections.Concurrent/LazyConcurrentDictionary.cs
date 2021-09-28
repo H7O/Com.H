@@ -75,7 +75,12 @@ namespace Com.H.Collections.Concurrent
                 (key, oldItem) => new Lazy<TValue>(() => updateValueFactory(key, oldItem.Value, factoryArgument)))
                 .Value;
         
-
+        /// <summary>
+        /// Thread-safe updates the dictionary. If a key doesn't exist, no update is done and the method returns default TValue.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="updateValueFactory"></param>
+        /// <returns></returns>
         public TValue Update(TKey key,
             Func<TKey, TValue, TValue> updateValueFactory)
         {
@@ -91,7 +96,29 @@ namespace Com.H.Collections.Concurrent
                 return default;
             }
         }
-            
+
+        /// <summary>
+        /// Thread-safe adds an item to the dictionary. If a key does exist, no add is done and the method returns default TValue.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="updateValueFactory"></param>
+        /// <returns></returns>
+        public TValue Add(TKey key,
+            Func<TKey, TValue> addValueFactory)
+        {
+            try
+            {
+                var value = this.AddOrUpdate(key,
+                    key => addValueFactory(key),
+                    (_, _) => throw new InvalidLazyConcurrentUpdateException());
+                return value;
+            }
+            catch (InvalidLazyConcurrentUpdateException)
+            {
+                return default;
+            }
+        }
+
         public bool ContainsKey(TKey key)
             =>
             this._dic.ContainsKey(key);

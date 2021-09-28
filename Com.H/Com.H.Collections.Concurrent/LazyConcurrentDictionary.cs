@@ -141,7 +141,7 @@ namespace Com.H.Collections.Concurrent
             return false;
         }
 
-        public bool TryRemove(TKey key, out TValue value)
+        public bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value)
         {
             Lazy<TValue> outValue;
             if (this._dic.TryRemove(key, out outValue))
@@ -152,6 +152,10 @@ namespace Com.H.Collections.Concurrent
             value = default;
             return false;
         }
+
+        public bool TryAdd(TKey key, TValue value)
+            => this._dic.TryAdd(key, new Lazy<TValue>(value));
+
 
         IEnumerator IEnumerable.GetEnumerator()
             =>

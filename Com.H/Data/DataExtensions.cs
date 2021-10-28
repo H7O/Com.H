@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Com.H.Data
@@ -41,6 +42,29 @@ namespace Com.H.Data
                 }
             }
             return result;
+        }
+        public static string ReplaceQueryParameterMarkers(
+            this string query,
+            string srcOpenMarker,
+            string srcCloseMarker,
+            string dstOpenMarker,
+            string dstCloseMarker)
+        {
+            if (string.IsNullOrEmpty(query)) return query;
+            var regexPattern = srcOpenMarker + QueryParams.RegexPattern + srcCloseMarker;
+            var paramList = Regex.Matches(query, regexPattern)
+                .Cast<Match>()
+                .Select(x => x.Groups["param"].Value)
+                .Where(x => !string.IsNullOrEmpty(x))
+                .Select(x => x).Distinct().ToList();
+
+            foreach (var item in paramList)
+            {
+                query = query.Replace(srcOpenMarker + item + srcCloseMarker,
+                    dstOpenMarker + item + dstCloseMarker);
+            }
+
+            return query;
         }
     }
 }

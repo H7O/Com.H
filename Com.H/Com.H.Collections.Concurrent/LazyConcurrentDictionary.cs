@@ -15,7 +15,7 @@ namespace Com.H.Collections.Concurrent
     }
     public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     {
-        private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
+        private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new();
         public LazyConcurrentDictionary()
         { }
 
@@ -131,8 +131,7 @@ namespace Com.H.Collections.Concurrent
 
         public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
         {
-            Lazy<TValue> outValue;
-            if (this._dic.TryGetValue(key, out outValue))
+            if (this._dic.TryGetValue(key, out Lazy<TValue> outValue))
             {
                 value = outValue.Value;
                 return true;
@@ -143,8 +142,7 @@ namespace Com.H.Collections.Concurrent
 
         public bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value)
         {
-            Lazy<TValue> outValue;
-            if (this._dic.TryRemove(key, out outValue))
+            if (this._dic.TryRemove(key, out Lazy<TValue> outValue))
             {
                 value = outValue.Value;
                 return true;

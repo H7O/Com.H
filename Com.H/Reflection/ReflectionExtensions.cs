@@ -78,7 +78,7 @@ namespace Com.H.Reflection
                type.GetDefault() : Convert.ChangeType(obj, dstType);
         }
 
-
-
+        public static bool IsDefault<T>(this T value) where T : struct
+            => value.Equals(default(T));
     }
 }

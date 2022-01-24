@@ -66,7 +66,7 @@ namespace Com.H.Cache
         public async Task StartAutoCleanup(TimeSpan? interval = null, CancellationToken? cToken = null)
         {
             try
-            {
+            { 
                 if (!this.CleanupSwitch.TryOpen())
                 {
                     try

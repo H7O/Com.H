@@ -13,6 +13,22 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Copyright>Hussein Al Bayati</Copyright>
     <AssemblyVersion>5.0.13.1</AssemblyVersion>
+    <PackageId>Com.H</PackageId>
+    <Product>Com.H</Product>
+    <PackageIcon>128x128.jpg</PackageIcon>
+    <PackageReadmeFile>nuget.md</PackageReadmeFile>
+    <PackageTags>general purpose</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\128x128.jpg">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\nuget.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
 </Project>

@@ -21,6 +21,7 @@ namespace Com.H.Threading
         public DateTime? CacheUntil { get; set; }
     }
 
+    // deprecated, use Com.H.Cache.MemoryCache instead
     public class CachedRunDeprecated : IDisposable
     {
 

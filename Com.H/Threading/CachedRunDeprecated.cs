@@ -20,7 +20,9 @@ namespace Com.H.Threading
         public T Value { get; set; }
         public DateTime? CacheUntil { get; set; }
     }
-
+    /// <summary>
+    /// Deprecated, use Com.H.Cache.MemoryCache instead
+    /// </summary>
     public class CachedRunDeprecated : IDisposable
     {
 

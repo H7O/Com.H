@@ -19,72 +19,98 @@ namespace Com.H.Net.Mail
         public int? Port { get; set; }
         public string Uid { get; set; }
         public string Pwd { get; set; }
-        public bool Ssl { get; set; }
+        public bool Ssl { get; set; } = false;
         public string Subject { get; set; }
         public string From { get; set; }
         public string Body { get; set; }
 
         #region to
 
-        public List<string> To { get; set; }
+        public List<string> To { get; private set; } = new();
         public string ToStr
         {
-            get => string.Join(',', this.To);
-            set => this.To = value.Split(new char[] { ',', ' ', ';' },
-                    StringSplitOptions.RemoveEmptyEntries
-                    | StringSplitOptions.TrimEntries).ToList();
+            get => this.To is null ? null : string.Join(',', this.To);
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    this.To.Clear();
+                    return;
+                }
+
+                foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
+                  StringSplitOptions.RemoveEmptyEntries
+                  | StringSplitOptions.TrimEntries).Where(x =>
+                  !string.IsNullOrWhiteSpace(x)
+                  ))
+                    this.To.Add(email);
+
+            }
         }
 
         #endregion
 
         #region cc
 
-        public List<string> Cc { get; set; }
+        public List<string> Cc { get; private set; } = new();
         public string CcStr
         {
-            get => string.Join(',', this.Cc);
-            set => this.Cc = value.Split(new char[] { ',', ' ', ';' },
-                    StringSplitOptions.RemoveEmptyEntries
-                    | StringSplitOptions.TrimEntries).ToList();
+            get => this.Cc is null ? null : string.Join(',', this.Cc);
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    this.Cc.Clear();
+                    return;
+                }
+
+                foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
+                  StringSplitOptions.RemoveEmptyEntries
+                  | StringSplitOptions.TrimEntries).Where(x =>
+                  !string.IsNullOrWhiteSpace(x)
+                  ))
+                    this.Cc.Add(email);
+
+            }
         }
 
         #endregion        
 
         #region bcc
-        public List<string> Bcc { get; set; }
+        public List<string> Bcc { get; private set; } = new();
         public string BccStr
         {
-            get => string.Join(',', this.Bcc);
-            set => this.Bcc = value.Split(new char[] { ',', ' ', ';' },
-                    StringSplitOptions.RemoveEmptyEntries
-                    | StringSplitOptions.TrimEntries).ToList();
+            get => this.Bcc is null ? null : string.Join(',', this.Bcc);
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    this.Bcc.Clear();
+                    return;
+                }
+
+                foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
+                  StringSplitOptions.RemoveEmptyEntries
+                  | StringSplitOptions.TrimEntries).Where(x =>
+                  !string.IsNullOrWhiteSpace(x)
+                  ))
+                    this.Bcc.Add(email);
+
+            }
         }
         #endregion        
 
-        private System.Net.Mail.MailMessage Msg { get; set; }
+        private System.Net.Mail.MailMessage Msg { get; } = new();
 
         /// <summary>
         /// Default: true
         /// </summary>
-        public bool IsHtml { get; set; }
+        public bool IsHtml { get; set; } = true;
 
-        public MailAttachmentCollection Attachments { get; init; }
+        public MailAttachmentCollection Attachments { get; } = new();
 
         #endregion
 
-        #region constructor
-        public Message()
-        {
-            this.IsHtml = true;
-            this.Ssl = false;
-            this.To = new List<string>();
-            this.Cc = new List<string>();
-            this.Bcc = new List<string>();
-
-            this.Msg = new System.Net.Mail.MailMessage();
-            this.Attachments = new MailAttachmentCollection();
-        }
-        #endregion
 
         
 

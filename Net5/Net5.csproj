@@ -18,6 +18,10 @@
     <PackageIcon>128x128.jpg</PackageIcon>
     <PackageReadmeFile>nuget.md</PackageReadmeFile>
     <PackageTags>general purpose</PackageTags>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <AssemblyName>Com.H</AssemblyName>
+    <RootNamespace>Com.H</RootNamespace>
+    <SignAssembly>False</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>

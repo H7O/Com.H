@@ -14,12 +14,12 @@ namespace Com.H.Cache
     /// </summary>
     public class MemoryCache : IDisposable
     {
-        private CancellationTokenSource Cts { get; set; }
+        private CancellationTokenSource? Cts { get; set; }
         private AtomicGate CleanupSwitch { get; set; } = new();
         internal class CacheItem
         {
             internal DateTime ExpiryDate { get; set; }
-            internal object Value { get; set; }
+            internal object? Value { get; set; }
             internal bool Expired
             {
                 get => DateTime.Now >= this.ExpiryDate;
@@ -28,8 +28,8 @@ namespace Com.H.Cache
         }
         private readonly ConcurrentDictionary<object, Lazy<CacheItem>> cacheItems = new();
 
-        public T Get<T>(object key, Func<T> getValue, TimeSpan? timeSpan = null)
-            => (T)this.cacheItems.AddOrUpdate(key,
+        public T? Get<T>(object key, Func<T> getValue, TimeSpan? timeSpan = null) 
+            => (T?)this.cacheItems.AddOrUpdate(key,
                 _ => new Lazy<CacheItem>(()=> new CacheItem()
                 {
                     ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
@@ -98,6 +98,7 @@ namespace Com.H.Cache
             {
                 this.ClearExpired();
                 this.Cts?.Cancel();
+                GC.SuppressFinalize(this);
             }
             catch { }
         }

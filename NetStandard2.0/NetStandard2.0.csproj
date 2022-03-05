@@ -16,6 +16,7 @@
     <Version>2.0.0.1</Version>
     <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
     <PackageTags>general purpose</PackageTags>
+    <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
   </PropertyGroup>
 
   <ItemGroup>

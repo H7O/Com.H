@@ -367,8 +367,8 @@ namespace Com.H.Text
                     var dicParams = x.DataModel?.GetDataModelParameters();
                     return Regex.Matches(src, x.OpenMarker + QueryParams.RegexPattern + x.CloseMarker)
                         .Cast<Match>()
-                        .Select(x => x.Groups["param"].Value)
-                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Select(m => m.Groups["param"].Value)
+                        .Where(m => !string.IsNullOrWhiteSpace(m))
                         .Distinct()
                         .Select(varName => new
                         {

@@ -53,7 +53,7 @@ namespace Com.H.Collections.Concurrent
             => this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue?>(value),
-                (key, oldItem) => new Lazy<TValue?>(() => updateValueFactory(key, oldItem.Value)))
+                (k, oldItem) => new Lazy<TValue?>(() => updateValueFactory(k, oldItem.Value)))
                 .Value;
 
         public TValue? AddOrUpdate(TKey key,
@@ -62,7 +62,7 @@ namespace Com.H.Collections.Concurrent
             => this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue?>(() => addValueFactory(key)),
-                (key, oldItem) => new Lazy<TValue?>(() => updateValueFactory(key, oldItem.Value)))
+                (k, oldItem) => new Lazy<TValue?>(() => updateValueFactory(k, oldItem.Value)))
                 .Value;
 
         public TValue? AddOrUpdate<TArg>(TKey key,
@@ -73,7 +73,7 @@ namespace Com.H.Collections.Concurrent
             this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue?>(() => addValueFactory(key, factoryArgument)),
-                (key, oldItem) => new Lazy<TValue?>(() => updateValueFactory(key, oldItem.Value, factoryArgument)))
+                (k, oldItem) => new Lazy<TValue?>(() => updateValueFactory(k, oldItem.Value, factoryArgument)))
                 .Value;
         
         /// <summary>
@@ -89,7 +89,7 @@ namespace Com.H.Collections.Concurrent
             {
                 var value = this.AddOrUpdate(key, 
                     _ => throw new InvalidLazyConcurrentUpdateException(),
-                    (key, oldValue) => updateValueFactory(key, oldValue));
+                    (k, oldValue) => updateValueFactory(k, oldValue));
                 return value;
             }
             catch (InvalidLazyConcurrentUpdateException)
@@ -110,7 +110,7 @@ namespace Com.H.Collections.Concurrent
             try
             {
                 var value = this.AddOrUpdate(key,
-                    key => addValueFactory(key),
+                    k => addValueFactory(k),
                     (_, _) => throw new InvalidLazyConcurrentUpdateException());
                 return value;
             }

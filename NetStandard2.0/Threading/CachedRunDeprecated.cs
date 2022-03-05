@@ -60,7 +60,7 @@ namespace Com.H.Threading
         public T Run<T>(
             Func<T> func,
             TimeSpan duration,
-            object uniqueKey = null
+            object uniqueKey = default
             ) => this.Run<T>(func, DateTime.Now.Add(duration), uniqueKey);
         
         public T Run<T>(
@@ -171,7 +171,7 @@ namespace Com.H.Threading
             else
                 this.Cts = CancellationTokenSource
                     .CreateLinkedTokenSource((CancellationToken)cToken);
-            Task cleanupMonitoring = new(() =>
+            Task cleanupMonitoring = new Task(() =>
             {
                 while (!this.Cts.Token.IsCancellationRequested)
                 {
@@ -192,7 +192,7 @@ namespace Com.H.Threading
         public void DisableAutoCleanup()
         {
             if (!this.CleanupSwitch.IsOpen) return;
-            this.Cts.Cancel();
+            this.Cts?.Cancel();
         }
 
         private void RemoveExpired()
@@ -206,7 +206,8 @@ namespace Com.H.Threading
                     .Where(x => x.CacheUntil != null && x.CacheUntil <= DateTime.Now)
                     .Select(x => x.UniqueKey).ToList();
                 foreach (var key in expired)
-                    this.CachedItems.TryRemove(key, out _);
+                    if (key != null)
+                        this.CachedItems.TryRemove(key, out _);
             }
             catch { throw; }
             finally

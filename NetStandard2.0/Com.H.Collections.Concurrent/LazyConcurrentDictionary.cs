@@ -13,23 +13,25 @@ namespace Com.H.Collections.Concurrent
     {
 
     }
-    public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
+    public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> 
     {
-        private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new();
+        private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
         public LazyConcurrentDictionary()
         { }
 
         public LazyConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
-        => this._dic = new ConcurrentDictionary<TKey, Lazy<TValue>>(
-            keyValuePairs.Select(x =>
-                    new KeyValuePair<TKey, Lazy<TValue>>(x.Key, new Lazy<TValue>(x.Value))
-            ));
+        =>
+            this._dic = new ConcurrentDictionary<TKey, Lazy<TValue>>(
+                       keyValuePairs.Select(x =>
+                               new KeyValuePair<TKey, Lazy<TValue>>(x.Key, new Lazy<TValue>(()=>x.Value))
+                       ));
+        
 
         public TValue this[TKey key]
         {
             get
             {
-                if (key is null
+                if (key == null
                     || !this._dic.ContainsKey(key)
                     ) return default;
                 this._dic.TryGetValue(key, out var lv);
@@ -37,7 +39,7 @@ namespace Com.H.Collections.Concurrent
             }
             set
             {
-                if (key is null) return;
+                if (key == null) return;
                 _ = this.AddOrUpdate(key, value, (_, oldItem) => value);
             }
         }
@@ -49,9 +51,10 @@ namespace Com.H.Collections.Concurrent
         public int Count => this._dic.Count;
 
         public TValue AddOrUpdate(TKey key, TValue value, Func<TKey, TValue, TValue> updateValueFactory)
+            
             => this._dic.AddOrUpdate(
                 key,
-                new Lazy<TValue>(value),
+                new Lazy<TValue>(()=>value),
                 (k, oldItem) => new Lazy<TValue>(() => updateValueFactory(k, oldItem.Value)))
                 .Value;
 
@@ -72,7 +75,7 @@ namespace Com.H.Collections.Concurrent
             this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => addValueFactory(key, factoryArgument)),
-                (k, oldItem) => new Lazy<TValue>(() => updateValueFactory(k, oldItem.Value, factoryArgument)))
+                (k, oldItem) => new Lazy<TValue>(() => updateValueFactory(key, oldItem.Value, factoryArgument)))
                 .Value;
         
         /// <summary>
@@ -109,8 +112,8 @@ namespace Com.H.Collections.Concurrent
             try
             {
                 var value = this.AddOrUpdate(key,
-                    key => addValueFactory(key),
-                    (_, _) => throw new InvalidLazyConcurrentUpdateException());
+                    k => addValueFactory(k),
+                    (_, _discard) => throw new InvalidLazyConcurrentUpdateException());
                 return value;
             }
             catch (InvalidLazyConcurrentUpdateException)
@@ -129,22 +132,22 @@ namespace Com.H.Collections.Concurrent
                 .GetEnumerator();
 
 
-        public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
+        public bool TryGetValue(TKey key, out TValue value)
         {
             if (this._dic.TryGetValue(key, out Lazy<TValue> outValue))
             {
-                value = outValue.Value;
+                value = outValue == null ? default : outValue.Value;
                 return true;
             }
             value = default;
             return false;
         }
 
-        public bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value)
+        public bool TryRemove(TKey key, out TValue value)
         {
             if (this._dic.TryRemove(key, out Lazy<TValue> outValue))
             {
-                value = outValue.Value;
+                value = outValue == null ? default : outValue.Value;
                 return true;
             }
             value = default;
@@ -152,7 +155,7 @@ namespace Com.H.Collections.Concurrent
         }
 
         public bool TryAdd(TKey key, TValue value)
-            => this._dic.TryAdd(key, new Lazy<TValue>(value));
+            => this._dic.TryAdd(key, new Lazy<TValue>(()=>value));
 
 
         IEnumerator IEnumerable.GetEnumerator()

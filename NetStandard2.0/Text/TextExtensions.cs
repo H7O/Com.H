@@ -21,10 +21,14 @@ namespace Com.H.Text
         public static bool EqualsIgnoreCase(
             this string originalString,
             string stringToCompare)
-            => originalString.IsNullEqual(stringToCompare) ??
+            =>
+            originalString?.IsNullEqual(stringToCompare) ??
+            // IsNullEquals ensures no scenario would result in originalString and/or stringToCompare are null
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
                 originalString
                 .ToUpper(CultureInfo.InvariantCulture)
                 .Equals(stringToCompare.ToUpper(CultureInfo.InvariantCulture));
+#pragma warning restore CS8602 // Dereference of a possibly null reference.        
 
         /// <summary>
         /// Performs case insensitive StartsWith string comparison.
@@ -85,7 +89,9 @@ namespace Com.H.Text
         /// <returns></returns>
         public static IEnumerable<int> ExtractInts(this string text)
         {
-            foreach (var match in Regex.Matches(text, @"-?\d+", RegexOptions.Singleline))
+            foreach (var match in Regex.Matches(text, @"-?\d+", RegexOptions.Singleline)
+                .Cast<Match>()
+                .Where(m=>m != null))
                 yield return int.Parse(match.ToString(), CultureInfo.InvariantCulture);
         }
 
@@ -278,7 +284,7 @@ namespace Com.H.Text
         {
 
             var dates_string = text.Split(seperators?? new string[] { "|" },
-                  StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                  StringSplitOptions.RemoveEmptyEntries).Select(x=>x?.Trim())
                 .AsEnumerable();
 
             // normal
@@ -324,19 +330,17 @@ namespace Com.H.Text
         {
             if (dataModel == null) return src;
             
-            List<IDictionary<string, object>> parameters = new();
-
-            foreach (var item in dataModel.EnsureEnumerable())
+            List<IDictionary<string, object>> parameters = new List<IDictionary<string, object>>();
+            
+            foreach (var item in dataModel.EnsureEnumerable().Where(x=> x != null))
             {
                 parameters.Add(
-                    item == null ? null
-                          :
                           typeof(IDictionary<string, object>).IsAssignableFrom(item.GetType())
                           ?
                           ((IDictionary<string, object>)item)
                           :
                           ((object) item).GetType().GetProperties()
-                                          .ToDictionary(k => k.Name, v => v.GetValue(item, null))
+                                          .ToDictionary(k => k.Name, v => v?.GetValue(item, null))
                     );
             }
 
@@ -356,16 +360,16 @@ namespace Com.H.Text
         {
             if (queryParams?.Any() == false || string.IsNullOrEmpty(src)) return src;
 
-            Dictionary<string, int> varNameCount = new();
+            Dictionary<string, int> varNameCount = new Dictionary<string, int>();
 
-            var paramList = queryParams.Reverse()
+            var paramList = queryParams?.Reverse()
                 .SelectMany(x =>
                 {
                     var dicParams = x.DataModel?.GetDataModelParameters();
                     return Regex.Matches(src, x.OpenMarker + QueryParams.RegexPattern + x.CloseMarker)
                         .Cast<Match>()
-                        .Select(m => m.Groups["param"].Value)
-                        .Where(m => !string.IsNullOrWhiteSpace(m))
+                        .Select(y => y.Groups["param"].Value)
+                        .Where(y => !string.IsNullOrWhiteSpace(y))
                         .Distinct()
                         .Select(varName => new
                         {
@@ -380,29 +384,23 @@ namespace Com.H.Text
                         });
                 }).ToList();
 
-            if (paramList.Count > 0)
+            if (paramList?.Count > 0)
             {
                 foreach (var item in paramList)
                 {
                     if (item.Value == null) src = src
                         .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
-                            item.NullReplacement, true,
-                            CultureInfo.InstalledUICulture);
+                            item.NullReplacement);
                     else
                     {
                         src = src
                         .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
-                        item.Value.ToString(), true,
-                            CultureInfo.InvariantCulture);
+                        item.Value.ToString());
                     }
                 }
 
             }
-
             return src;
-
-
-
         }
 
 

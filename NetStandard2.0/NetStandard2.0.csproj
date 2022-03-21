@@ -12,7 +12,7 @@
     <Authors>Hussein Al Bayati</Authors>
     <ApplicationIcon>128x128.ico</ApplicationIcon>
     <PackageIcon>128x128.jpg</PackageIcon>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>nuget.md</PackageReadmeFile>
     <Version>2.0.0.2</Version>
     <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
     <PackageTags>general purpose</PackageTags>
@@ -22,22 +22,16 @@
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Content Include="128x128.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Linq\Async\" />
-  </ItemGroup>
-
+  
+  
   <ItemGroup>
     <None Include="..\128x128.jpg">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="..\README.md">
-      <Pack>True</Pack>
+    <None Include="..\nuget.md" Link="nuget.md">
       <PackagePath>\</PackagePath>
+      <Pack>True</Pack>
     </None>
   </ItemGroup>
 

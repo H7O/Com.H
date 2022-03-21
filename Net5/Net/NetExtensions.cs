@@ -73,7 +73,7 @@ namespace Com.H.Net
                 uri.AbsoluteUri.Remove(uri.AbsoluteUri.Length - 1) : uri.AbsoluteUri;
             var lastIndexOfSeperator = uriPath.LastIndexOf("/");
             if (lastIndexOfSeperator > -1)
-                return new Uri(uriPath.Substring(0, lastIndexOfSeperator + 1), UriKind.Absolute);
+                return new Uri(uriPath[..(lastIndexOfSeperator + 1)], UriKind.Absolute);
             return new Uri(uri.AbsoluteUri, UriKind.Absolute);
         }
 

@@ -52,19 +52,136 @@ namespace Com.H.Linq
         /// <param name="traversableItem">An item that carries children of the same type as itself</param>
         /// <param name="path">A string path representing the decendants tree seperated by a delimiter</param>
         /// <param name="findChild">A delegate that takes a parent element and tries to find a direct decendant wihin its children that corresponds to the child path sub-string</param>
-        /// <param name="pathDelimiter">A delimieter string to be used to distinguish between decendant elements in the path string</param>
+        /// <param name="pathDelimiters">Delimieters to be used to distinguish between decendant elements in the path string</param>
         /// <returns></returns>
-        public static T? TravGetItem<T>(this T traversableItem,
+        public static T? FindDescendant<T>(
+            this T traversableItem,
             string path,
-            Func<T?, string, T> findChild,
-            string pathDelimiter = "/") => string.IsNullOrEmpty(path) ? default
-            : path.Split(new string[] { pathDelimiter },
+            Func<T, string, T?> findChild,
+            string[] pathDelimiters
+            )
+            => string.IsNullOrEmpty(path)
+                || EqualityComparer<T>.Default.Equals(traversableItem, default)
+                || findChild is null
+                || pathDelimiters == null
+                || pathDelimiters.Length < 1
+                ? default
+            : path.Split(pathDelimiters,
                 StringSplitOptions.RemoveEmptyEntries)
-                .Aggregate(default(T), (i, n) =>
-                    EqualityComparer<T>.Default.Equals(findChild(i, n), default) ?
-                    findChild(traversableItem, n)
-                    : TravGetItem(i, n, findChild, pathDelimiter)
+                .Aggregate((T?)traversableItem, (i, n) =>
+                   i == null
+                   || EqualityComparer<T>.Default.Equals(i, default) ?
+                   default
+                   :
+                   findChild(i, n)
                 );
+
+        /// <summary>
+        /// Find and return an item within a hierarchical tree structure by traversing it's child elements using a string
+        /// path that denotes its tree elements seperated by a pre-defined string delimiter.
+        /// </summary>
+        /// <typeparam name="T">Traversable object</typeparam>
+        /// <param name="traversableItem">An item that carries children of the same type as itself</param>
+        /// <param name="path">A string path representing the decendants tree seperated by a delimiter</param>
+        /// <param name="findChild">A delegate that takes a parent element and tries to find a direct decendant wihin its children that corresponds to the child path sub-string</param>
+        /// <param name="pathDelimiters">Delimieters to be used to distinguish between decendant elements in the path string</param>
+        /// <returns></returns>
+        public static T? FindDescendant<T>(this T traversableItem,
+            string path,
+            Func<T, string, T?> findChild,
+            char[] pathDelimiters)
+            => string.IsNullOrEmpty(path)
+                || EqualityComparer<T>.Default.Equals(traversableItem, default)
+                || findChild is null
+                || pathDelimiters == null
+                || pathDelimiters.Length < 1
+                ? default
+            : path.Split(pathDelimiters,
+                StringSplitOptions.RemoveEmptyEntries)
+                .Aggregate((T?)traversableItem, (i, n) =>
+                   i == null
+                   || EqualityComparer<T>.Default.Equals(i, default) ?
+                   default
+                   :
+                   findChild(i, n)
+                );
+
+
+
+        /// <summary>
+        /// Find and return item(s) within a hierarchical tree structure by traversing it's child elements using a string
+        /// path that denotes its tree elements seperated by a pre-defined string delimiter.
+        /// </summary>
+        /// <typeparam name="T">Traversable object</typeparam>
+        /// <param name="traversableItem">An item that carries children of the same type as itself</param>
+        /// <param name="path">A string path representing the decendants tree seperated by a delimiter</param>
+        /// <param name="findChildren">A delegate that takes a parent element and tries to find direct decendants wihin its children that corresponds to the child path sub-string</param>
+        /// <param name="pathDelimiters">Delimieters to be used to distinguish between decendant elements in the path string</param>
+
+        public static IEnumerable<T?>? FindDescendants<T>(
+            this T traversableItem,
+            string path,
+            Func<T, string, IEnumerable<T?>?> findChildren,
+            string[] pathDelimiters
+            ) =>
+            string.IsNullOrEmpty(path)
+                  || EqualityComparer<T>.Default.Equals(traversableItem, default)
+                  || findChildren is null
+                  || pathDelimiters == null
+                  || pathDelimiters.Length < 1
+                  ? default
+              : path.Split(pathDelimiters,
+                  StringSplitOptions.RemoveEmptyEntries)
+                  .Aggregate(Enumerable.Empty<T?>().Append(traversableItem), (i, n) =>
+                  // null already checked
+#pragma warning disable CS8603 // Possible null reference return.
+                      i is null
+                      ?
+                      null
+                      :
+                       i?.Where(x => x is not null && !EqualityComparer<T>.Default.Equals(x, default))
+                           .SelectMany(x => x is null?null:findChildren(x, n))
+                       .Where(x => x != null && !EqualityComparer<T>.Default.Equals(x, default))
+#pragma warning restore CS8603 // Possible null reference return.
+                  );
+
+
+        /// <summary>
+        /// Find and return item(s) within a hierarchical tree structure by traversing it's child elements using a string
+        /// path that denotes its tree elements seperated by a pre-defined string delimiter.
+        /// </summary>
+        /// <typeparam name="T">Traversable object</typeparam>
+        /// <param name="traversableItem">An item that carries children of the same type as itself</param>
+        /// <param name="path">A string path representing the decendants tree seperated by a delimiter</param>
+        /// <param name="findChildren">A delegate that takes a parent element and tries to find direct decendants wihin its children that corresponds to the child path sub-string</param>
+        /// <param name="pathDelimiters">Delimieters to be used to distinguish between decendant elements in the path string</param>
+
+        public static IEnumerable<T?>? FindDescendants<T>(
+            this T traversableItem,
+            string path,
+            Func<T, string, IEnumerable<T?>?> findChildren,
+            char[] pathDelimiters
+            ) =>
+            string.IsNullOrEmpty(path)
+                  || EqualityComparer<T>.Default.Equals(traversableItem, default)
+                  || findChildren is null
+                  || pathDelimiters == null
+                  || pathDelimiters.Length < 1
+                  ? default
+              : path.Split(pathDelimiters,
+                  StringSplitOptions.RemoveEmptyEntries)
+                  .Aggregate(Enumerable.Empty<T?>().Append(traversableItem), (i, n) =>
+                  // null already checked
+#pragma warning disable CS8603 // Possible null reference return.
+                      i is null
+                      ?
+                      null
+                      :
+                       i?.Where(x => x is not null && !EqualityComparer<T>.Default.Equals(x, default))
+                           .SelectMany(x => x is null ? null : findChildren(x, n))
+                       .Where(x => x != null && !EqualityComparer<T>.Default.Equals(x, default))
+#pragma warning restore CS8603 // Possible null reference return.
+                  );
 
 
     }

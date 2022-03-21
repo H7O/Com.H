@@ -5,7 +5,7 @@
     <RootNamespace>Com.H</RootNamespace>
     <AssemblyName>Com.H</AssemblyName>
     <FileVersion></FileVersion>
-    <AssemblyVersion>2.0.0.1</AssemblyVersion>
+    <AssemblyVersion>2.0.0.2</AssemblyVersion>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -13,7 +13,7 @@
     <ApplicationIcon>128x128.ico</ApplicationIcon>
     <PackageIcon>128x128.jpg</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>2.0.0.1</Version>
+    <Version>2.0.0.2</Version>
     <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
     <PackageTags>general purpose</PackageTags>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>

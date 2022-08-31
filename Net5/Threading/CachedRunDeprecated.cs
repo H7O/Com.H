@@ -11,13 +11,13 @@ namespace Com.H.Threading
 {
     internal interface ICachedRunItem 
     {
-        object? UniqueKey { get; set; }
+        object UniqueKey { get; set; }
         DateTime? CacheUntil { get; set; }
     }
     internal class CachedRunItem<T> : ICachedRunItem
     {
-        public object? UniqueKey { get; set; }
-        public T? Value { get; set; }
+        public object UniqueKey { get; set; }
+        public T Value { get; set; }
         public DateTime? CacheUntil { get; set; }
     }
 
@@ -28,7 +28,7 @@ namespace Com.H.Threading
         #region properties
         public DateTime? DefaultCacheUntil { get; set; }
         private ReaderWriterLockSlim RWLock { get; set; }
-        private CancellationTokenSource? Cts { get; set; }
+        private CancellationTokenSource Cts { get; set; }
         private AtomicGate CleanupSwitch { get; set; }
         private bool disposedValue;
         private ConcurrentDictionary<object, ICachedRunItem> CachedItems { get; set; }
@@ -57,19 +57,18 @@ namespace Com.H.Threading
         /// <param name="duration"></param>
         /// <param name="uniqueKey"></param>
         /// <returns></returns>
-        public T? Run<T>(
+        public T Run<T>(
             Func<T> func,
             TimeSpan duration,
-            object? uniqueKey = default
-            ) => this.Run<T?>(func, DateTime.Now.Add(duration), uniqueKey);
+            object uniqueKey = default
+            ) => this.Run<T>(func, DateTime.Now.Add(duration), uniqueKey);
         
-        public T? Run<T>(
-            Func<T?> func,
+        public T Run<T>(
+            Func<T> func,
             DateTime? cacheUntil = null,
-            object? uniqueKey = null)
+            object uniqueKey = null)
         {
-            if (func == null) throw new ArgumentNullException(nameof(func));
-            if (uniqueKey == null) uniqueKey = func;
+            uniqueKey ??= func ?? throw new ArgumentNullException(nameof(func));
             this.RemoveExpired();
 
             try
@@ -105,17 +104,16 @@ namespace Com.H.Threading
         public void Run(
             Action action,
             TimeSpan duration,
-            object? uniqueKey = null
+            object uniqueKey = null
             ) => this.Run(action, DateTime.Now.Add(duration), uniqueKey);
 
 
         public void Run(
             Action action,
             DateTime? cacheUntil = null,
-            object? uniqueKey = null) 
+            object uniqueKey = null) 
         {
-            if (action == null) throw new ArgumentNullException(nameof(action));
-            if (uniqueKey == null) uniqueKey = action;
+            uniqueKey ??= action ?? throw new ArgumentNullException(nameof(action));
             this.RemoveExpired();
 
             try

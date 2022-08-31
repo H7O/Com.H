@@ -401,7 +401,7 @@ namespace Com.H.Text.Template
         public static string? RenderContent(
         this Uri uri,
         List<QueryParams>? queryParamsList = null,
-        Func<TemplateMultiDataRequest, IEnumerable<dynamic>>? dataProviders = null,
+        Func<TemplateMultiDataRequest, IEnumerable<dynamic>?>? dataProviders = null,
         CancellationToken? token = null,
         string? referrer = null,
         string? userAgent = null

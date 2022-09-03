@@ -47,6 +47,13 @@ namespace Com.H.Net
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
+            if (uri.Scheme?.EqualsIgnoreCase("file") == true)
+            {
+                if (!File.Exists(uri.LocalPath)) throw new FileNotFoundException($"File not found: {uri.LocalPath}", uri.LocalPath);
+                return cToken is null? await File.ReadAllTextAsync(uri.LocalPath)
+                    :
+                    await File.ReadAllTextAsync(uri.LocalPath, (CancellationToken)cToken);
+            }
             HttpClient client = new();
             if (!string.IsNullOrWhiteSpace(referer))
                 client.DefaultRequestHeaders.Add("Referer", referer);

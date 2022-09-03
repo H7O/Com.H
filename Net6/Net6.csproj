@@ -16,7 +16,7 @@
     <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
-    <PackageReleaseNotes>Small initial release for a general purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</PackageReleaseNotes>
+    <PackageReleaseNotes>Maintenance release.</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <AssemblyName>Com.H</AssemblyName>

@@ -22,6 +22,8 @@ namespace Com.H.Net.Mail
         public bool Ssl { get; set; } = false;
         public string? Subject { get; set; }
         public string? From { get; set; }
+        public string? FromDisplayName { get; set; }
+        public Encoding? FromDisplayNameEncoding { get; set; }
         public string? Body { get; set; }
 
         #region to
@@ -133,7 +135,7 @@ namespace Com.H.Net.Mail
             if (this.disposedValue) throw new ObjectDisposedException("Message");
             if (string.IsNullOrWhiteSpace(this.SmtpServer)) 
                 throw new MissingFieldException(nameof(this.SmtpServer));
-            if (this.Port is null) this.Port = 21;
+            this.Port ??= 21;
 
             if (this.Port < 1)
                 throw new FormatException($"Invalid port value");
@@ -162,8 +164,16 @@ namespace Com.H.Net.Mail
             }
             if (this.DeliveryMethod != null) 
                 client.DeliveryMethod = (System.Net.Mail.SmtpDeliveryMethod)DeliveryMethod;
+            if (this.FromDisplayName is not null)
+            {
+                this.Msg.From = this.FromDisplayNameEncoding is null ?
+                    new System.Net.Mail.MailAddress(this.From, this.FromDisplayName)
+                    : new System.Net.Mail.MailAddress(this.From, this.FromDisplayName, this.FromDisplayNameEncoding);
 
-            this.Msg.From = new System.Net.Mail.MailAddress(this.From);
+            }
+            else this.Msg.From = new System.Net.Mail.MailAddress(this.From);
+
+            
             this.To?.ForEach(x => this.Msg.To.Add(x));
             this.Cc?.ForEach(x => this.Msg.CC.Add(x));
             this.Bcc?.ForEach(x => this.Msg.Bcc.Add(x));

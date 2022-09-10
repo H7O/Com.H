@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Com.H.IO;
 using Com.H.Runtime.InteropServices;
 
 
@@ -37,10 +38,15 @@ namespace Com.H.Pdf
             string? tempFilePath = null
             )
         {
-            if (tempFilePath is null) tempFilePath = $"{Path.GetTempFileName()}.pdf";
+            if (string.IsNullOrWhiteSpace(tempFilePath))
+                tempFilePath = $"{Path.GetTempFileName()}.pdf";
+            
+            string htmlContentTempFilePath = tempFilePath + ".html";
+
 
             HtmlToPdfFile(htmlContent,
-                tempFilePath);
+                tempFilePath, 
+                htmlContentTempFilePath);
 
             return new FileStream(tempFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite
                 , 4000, FileOptions.DeleteOnClose);
@@ -57,7 +63,7 @@ namespace Com.H.Pdf
             if (string.IsNullOrWhiteSpace(outputFilePath)) throw new ArgumentNullException(nameof(outputFilePath));
             if (string.IsNullOrWhiteSpace(PdfConverterPath)) throw new MissingFieldException(nameof(PdfConverterPath));
 
-            if (htmlContentTempFilePath is null) htmlContentTempFilePath = $"{Path.GetTempFileName()}.html";
+            if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)) htmlContentTempFilePath = $"{Path.GetTempFileName()}.html";
             File.WriteAllText(htmlContentTempFilePath, htmlContent);
 
             var args = PdfConverterParameters?
@@ -75,6 +81,9 @@ namespace Com.H.Pdf
         private static void ConvertWin(string? converterPath, string? converterArgs)
         {
             if (string.IsNullOrWhiteSpace(converterPath)) throw new ArgumentNullException(nameof(converterPath));
+            converterPath = converterPath.UnifyPathSeperator();
+            if (!File.Exists(converterPath)) 
+                throw new FileNotFoundException($"Can't find PDF converter at path '{converterPath}'");
             var pInfo = new ProcessStartInfo(converterPath, converterArgs??"")
             {
                 UseShellExecute = false,

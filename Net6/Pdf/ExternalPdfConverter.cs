@@ -33,42 +33,42 @@ namespace Com.H.Pdf
 
 
         public FileStream HtmlToPdf(
-            string content,
+            string htmlContent,
             string? tempFilePath = null
             )
         {
-            if (tempFilePath is null) tempFilePath = $"{Path.GetTempFileName()}.html";
+            if (tempFilePath is null) tempFilePath = $"{Path.GetTempFileName()}.pdf";
 
-            HtmlToPdfFile(content,
+            HtmlToPdfFile(htmlContent,
                 tempFilePath);
 
             return new FileStream(tempFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite
-                , 512, FileOptions.DeleteOnClose);
+                , 4000, FileOptions.DeleteOnClose);
         }
 
 
         public void HtmlToPdfFile(
-            string content,
+            string htmlContent,
             string? outputFilePath,
-            string? tempFilePath = null
+            string? htmlContentTempFilePath = null
             )
         {
-            if (string.IsNullOrWhiteSpace(content)) throw new ArgumentNullException(nameof(content));
+            if (string.IsNullOrWhiteSpace(htmlContent)) throw new ArgumentNullException(nameof(htmlContent));
             if (string.IsNullOrWhiteSpace(outputFilePath)) throw new ArgumentNullException(nameof(outputFilePath));
             if (string.IsNullOrWhiteSpace(PdfConverterPath)) throw new MissingFieldException(nameof(PdfConverterPath));
 
-            if (tempFilePath is null) tempFilePath = $"{Path.GetTempFileName()}.html";
-            File.WriteAllText(tempFilePath, content);
+            if (htmlContentTempFilePath is null) htmlContentTempFilePath = $"{Path.GetTempFileName()}.html";
+            File.WriteAllText(htmlContentTempFilePath, htmlContent);
 
             var args = PdfConverterParameters?
-                .Replace("{{input}}", tempFilePath)
+                .Replace("{{input}}", htmlContentTempFilePath)
                 .Replace("{{output}}", outputFilePath);
             
             if (InteropExt.CurrentOSPlatform == OSPlatform.Windows)
                 ConvertWin(this.PdfConverterPath, args);
             else throw new NotSupportedException("Current OS platform is not supported at the moment");
 
-            File.Delete(tempFilePath);
+            File.Delete(htmlContentTempFilePath);
 
         }
 
@@ -77,7 +77,8 @@ namespace Com.H.Pdf
             if (string.IsNullOrWhiteSpace(converterPath)) throw new ArgumentNullException(nameof(converterPath));
             var pInfo = new ProcessStartInfo(converterPath, converterArgs??"")
             {
-                UseShellExecute = false
+                UseShellExecute = false,
+                WorkingDirectory = Path.GetDirectoryName(converterPath)
             };
             int oldMode = SetErrorMode(3);
             var p = Process.Start(pInfo);

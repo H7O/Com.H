@@ -20,15 +20,15 @@ namespace Com.H.Pdf
         static extern int SetErrorMode(int wMode);
 
         /// <summary>
-        /// Example a path to wkhtmltopdf.exe
-        /// For use with wkhtmltopdf tool
+        /// Example: a path to chrome.exe
+        /// On windows it's usually c:\Program Files\Google\Chrome\Application\chrome.exe
+        /// On Linux, it's usually opt/google/chrome/chrome
         /// </summary>
         public string? PdfConverterPath { get; set; }
 
-
         /// <summary>
-        /// Example "--print-media-type  --load-error-handling ignore "\"{{input}}\" \"{{output}}\""
-        /// for use with wkhtmltopdf tool
+        /// Example "--headless --print-to-pdf-no-header --run-all-compositor-stages-before-draw --print-to-pdf=\"{{output}}\" \"{{input}}\""
+        /// for use with chrome.exe
         /// </summary>
         public string? PdfConverterParameters { get; set; }
 

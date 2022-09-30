@@ -329,6 +329,23 @@ namespace Com.H.Text
         {
             if (dataModel == null) return src;
             
+            if (typeof(IEnumerable<QueryParams>).IsAssignableFrom(dataModel.GetType()))
+            {
+                IEnumerable<QueryParams> queryParams = (IEnumerable<QueryParams>)dataModel;
+                if (openingMarker is not null
+                    || closingMarker is not null
+                    || nullValueReplacement is not null)
+                    return Fill(src, queryParams);
+                return Fill(src, queryParams.Select(x => 
+                    new QueryParams()
+                    {
+                        OpenMarker = openingMarker ?? x.OpenMarker,
+                        CloseMarker = closingMarker ?? x.CloseMarker,
+                        NullReplacement = nullValueReplacement ?? x.NullReplacement
+                    }
+                ));
+            }
+
             List<IDictionary<string, object?>> parameters = new();
 
             foreach (var item in dataModel.EnsureEnumerable().Where(x=>x is not null))

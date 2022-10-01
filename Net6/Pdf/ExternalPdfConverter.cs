@@ -58,6 +58,26 @@ namespace Com.H.Pdf
 				, 4000, FileOptions.DeleteOnClose);
 		}
 
+        public void HtmlFileToPdfFile(
+            string htmlFilePath,
+            string pdfFilePath
+            )
+        {
+            // check if htmlFilePath exists
+            if (!File.Exists(htmlFilePath))
+                throw new FileNotFoundException($"File {htmlFilePath} not found");
+
+            // get parent directory name of htmlFilePath
+            string parentDirectory = Path.GetDirectoryName(htmlFilePath) ?? throw new ArgumentException($"Can't find parent directory of '{htmlFilePath}'");
+            string htmlTempPath = Path.Combine(parentDirectory, $"{Guid.NewGuid()}.tmp.html");
+
+            // convert HTML to PDF
+            HtmlToPdfFile(File.ReadAllText(htmlFilePath),
+                pdfFilePath,
+                htmlTempPath
+                );
+        }
+
 
 		public void HtmlToPdfFile(
 			string htmlContent,

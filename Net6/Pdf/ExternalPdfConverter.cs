@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Com.H.IO;
 using Com.H.Runtime.InteropServices;
 using Com.H.Shell;

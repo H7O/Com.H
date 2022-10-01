@@ -24,19 +24,14 @@ namespace Com.H.Pdf
 
 	public class ExternalPdfConverter
 	{
-		/// <summary>
-		/// Linux support coming soon.
-		/// </summary>
-		/// <param name="wMode"></param>
-		/// <returns></returns>
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		static extern int SetErrorMode(int wMode);
+		// [DllImport("kernel32.dll", SetLastError = true)]
+		// static extern int SetErrorMode(int wMode);
 
 		/// <summary>
-		/// Example: a path to chrome.exe
-		/// On windows it's usually c:\Program Files\Google\Chrome\Application\chrome.exe
-		/// On Linux, it's usually opt/google/chrome/chrome
+		/// Example: a path to chrome executable (or any other executable that can convert HTML to PDF)
+		/// On windows chrome usually installed under c:\Program Files\Google\Chrome\Application\chrome.exe
+		/// On Linux, chrome usually located at opt/google/chrome/chrome
 		/// </summary>
 		public string? PdfConverterPath { get; set; }
 

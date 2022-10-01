@@ -11,7 +11,7 @@ namespace Com.H.Pdf
 {
 	/// <summary>
 	/// Converts HTML to PDF using an external PDF converter.
-	/// by default, the converter looks up for chrome.exe in default expected locations of the following operating systems:
+	/// by default, the converter looks up for chrome executable in default expected locations of different operating systems:
     /// Windows: C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
     ///          or 
     ///          C:\Program Files\Google\Chrome\Application\chrome.exe

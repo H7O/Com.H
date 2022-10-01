@@ -84,10 +84,10 @@ namespace Com.H.Pdf
 					else if (File.Exists("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
 						PdfConverterPath = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
 					else
-						throw new Exception("Cannot find chrome.exe in either"
+						throw new MissingFieldException("Cannot find chrome.exe in either"
 						+ " 'C:/Program Files/Google/Chrome/Application/' or"
 						+ " 'C:/Program Files (x86)/Google/Chrome/Application/'"
-						+ " Please set PdfConverterPath");
+						+ $" Please set {nameof(PdfConverterPath)} to chrome.exe path, or to any other PDF CLI converter app.");
 				}
 				if (InteropExt.CurrentOSPlatform == OSPlatform.Linux)
 				{
@@ -99,7 +99,7 @@ namespace Com.H.Pdf
                         throw new MissingFieldException($"Cannot find chrome in either"
                         + " '/usr/bin/google-chrome' or"
                         + " '/opt/google/chrome/chrome'"
-                        + " Please set {nameof(PdfConverterPath)}");
+                        + $" Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
 
 				}
 				if (InteropExt.CurrentOSPlatform == OSPlatform.OSX)
@@ -107,15 +107,16 @@ namespace Com.H.Pdf
 					if (File.Exists("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
 						PdfConverterPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 					else
-						throw new MissingFieldException($"Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. Please set {nameof(PdfConverterPath)}");
+						throw new MissingFieldException("Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. "
+                                                    + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
 				}
 				if (InteropExt.CurrentOSPlatform == OSPlatform.FreeBSD)
 				{
-                    if (File.Exists(""))
 					if (File.Exists("/usr/local/bin/chrome"))
 						PdfConverterPath = "/usr/local/bin/chrome";
 					else
-						throw new MissingFieldException($"Cannot find chrome in '/usr/local/bin/chrome'. Please set {nameof(PdfConverterPath)}");
+						throw new MissingFieldException("Cannot find chrome in '/usr/local/bin/chrome'. "
+                            + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
 				}
 				if (string.IsNullOrWhiteSpace(this.PdfConverterParameters))
 					this.PdfConverterParameters = "--headless "

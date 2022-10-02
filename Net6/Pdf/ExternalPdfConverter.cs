@@ -81,7 +81,7 @@ namespace Com.H.Pdf
 
 		public void HtmlToPdfFile(
 			string htmlContent,
-			string? outputFilePath,
+			string outputFilePath,
 			string? htmlContentTempFilePath = null
 			)
 		{
@@ -146,6 +146,11 @@ namespace Com.H.Pdf
 
 			}
 
+            // check if PdfConverterPath is not null or white space
+            if (string.IsNullOrWhiteSpace(PdfConverterPath))
+                throw new MissingFieldException($"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+                
+
 			if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)) htmlContentTempFilePath = $"{IOExtensions.GetTempFilePath()}.html";
 			File.WriteAllText(htmlContentTempFilePath, htmlContent);
 
@@ -196,7 +201,7 @@ namespace Com.H.Pdf
 		//     p?.WaitForExit(60000);
 		// }
 
-		private static void Convert(string? converterPath, string? converterArgs)
+		private static void Convert(string converterPath, string? converterArgs)
 		{
 			if (string.IsNullOrWhiteSpace(converterPath)) throw new ArgumentNullException(nameof(converterPath));
 			converterPath = converterPath.UnifyPathSeperator();

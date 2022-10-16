@@ -160,6 +160,10 @@ namespace Com.H.Pdf
 
 			try
 			{
+				var parentDirectory = Path.GetDirectoryName(outputFilePath);
+				if (!string.IsNullOrWhiteSpace(parentDirectory)
+					&& !Directory.Exists(parentDirectory))
+					Directory.CreateDirectory(parentDirectory);
 				Convert(this.PdfConverterPath, args);
 			}
 			catch(Exception ex)

@@ -607,5 +607,192 @@ namespace Com.H.Text.Template
         }
 
 
+        public static string? RenderContent(
+        this string content,
+        List<QueryParams>? queryParamsList = null,
+        Func<TemplateMultiDataRequest, IEnumerable<dynamic>?>? dataProviders = null,
+        CancellationToken? token = null,
+        string? referrer = null,
+        string? userAgent = null
+        )
+        {
+            // todo: needs heavy refactoring and optimizing
+            // Uri version of this method should call this method after retrieving URI info.
+            if (string.IsNullOrEmpty(content)) return content;
+            content = content.FillDates();
+
+
+
+            #region check for data providers and data tag availability in content
+
+            IEnumerable<dynamic>? dataResponse = null;
+
+            QueryParams newQueryParams = new();
+
+            //var nextOpenMarker = queryParamsList?.OpenMarker;
+            //var nextCloseMarker = queryParamsList?.CloseMarker;
+            //var nextNullValue = queryParamsList?.NullReplacement;
+
+            if (dataProviders != null)
+            {
+
+                var dataRequestMatch = Regex.Match(content,
+                    DataTagContentRegex,
+                    RegexOptions.Singleline);
+
+                // get data if data request tags available
+                if (dataRequestMatch.Success)
+                {
+                    // no pre-filling data model before calling data providers
+                    // (unless pre-fill = true)
+                    // as data model is submitted to data providers
+                    // to allow data providers implement their own sql injection
+                    // protection if needed
+
+
+                    //TemplateMultiDataRequest req = new TemplateMultiDataRequest();
+                    //req.QueryParamsList = queryParamsList;
+                    //req.Request = dataRequestMatch.Groups["content"]?.Value;
+                    //req.ConnectionString = dataRequestMatch?.GetAttrib("connection-string");
+                    //req.ContentType = dataRequestMatch.GetAttrib("content-type");
+
+
+                    _ = bool.TryParse((dataRequestMatch
+                        .GetAttrib("pre-render") ?? "false"), out bool preRender);
+
+                    dataResponse = dataProviders(new()
+                    {
+                        QueryParamsList = queryParamsList,
+                        Request = dataRequestMatch.Groups["content"]?.Value,
+                        ConnectionString = dataRequestMatch?
+                        .GetAttrib("connection-string"),
+                        ContentType = dataRequestMatch?
+                        .GetAttrib("content-type"),
+                        CancellationToken = token,
+                        PreRender = preRender
+                    });
+
+                    //if (dataResponse !=null)
+                    //    newQueryParams.DataModel = dataResponse;
+                    if (dataRequestMatch?.GetAttrib("open-marker") != null)
+                        newQueryParams.OpenMarker = dataRequestMatch.GetAttrib("open-marker");
+                    if (dataRequestMatch?.GetAttrib("close-marker") != null)
+                        newQueryParams.CloseMarker = dataRequestMatch.GetAttrib("close-marker");
+                    if (dataRequestMatch?.GetAttrib("null-value") != null)
+                        newQueryParams.NullReplacement = dataRequestMatch.GetAttrib("null-value");
+                }
+            }
+
+
+            #endregion
+
+
+            #region loop response data while rendering current recursive level content
+
+
+
+            // remove the data tag if it was available as it should 
+            // already be processed by now and not needed anymore
+            content = Regex.Replace(content, DataTagContentRegex,
+                "", RegexOptions.Singleline);
+
+
+            string renderedContent = "";
+            if (dataResponse != null)
+            {
+                foreach (var item in dataResponse.EnsureEnumerable())
+                {
+                    // todo: replace with markers from regex, failover to 
+                    // subDataModelContainer markers
+                    newQueryParams.DataModel = ((object)item)?.EnsureEnumerable();
+
+                    queryParamsList?.Add(newQueryParams);
+
+
+                    // content is the template with vars that gets filled with different
+                    // data model and the fill result gets accumulated in filledContent
+                    var filledContent = content.Fill(queryParamsList);
+                    
+                    // retrieve sub-templates recursively from current recursive level 
+                    // rendered content
+                    foreach (var templateTagMatch in Regex.Matches(
+                        filledContent, TemplateTagRegex).Cast<Match>())
+                    {
+                        var subUri = templateTagMatch.Groups["content"]?.Value;
+                        // todo: replace {uri{./}} placeholder with functioning uri traversal logic
+                        if (subUri?.Contains("{uri{./}}") == true
+                            || subUri?.Contains("{uri{.}}") == true
+                            )
+                            subUri = subUri
+                                .Replace("{uri{./}}", AppDomain.CurrentDomain.BaseDirectory + "/")
+                                .Replace("{uri{.}}", AppDomain.CurrentDomain.BaseDirectory);
+
+                        if (!string.IsNullOrWhiteSpace(subUri)
+                            ||
+                            Uri.IsWellFormedUriString(subUri, UriKind.Absolute)
+                            )
+                        {
+                            var subTemplateContent = new Uri(subUri).RenderContent(
+                                queryParamsList,
+                                dataProviders,
+                                token,
+                                // todo: optional grab of referrer from regex sub-template tag
+                                referrer,
+                                userAgent
+                                );
+                            // replace sub-template tag with rendered sub-template content
+                            filledContent = filledContent.Replace(templateTagMatch.Value, subTemplateContent);
+                        }
+                        // sub-template tag removal if no valid uri was available
+                        else filledContent = filledContent.Replace(templateTagMatch.Value, "");
+                    }
+                    renderedContent += filledContent;
+                }
+
+            }
+            else
+            {
+                if (queryParamsList != null) content = content.Fill(queryParamsList);
+                foreach (var templateTagMatch in Regex.Matches(
+                    content, TemplateTagRegex).Cast<Match>())
+                {
+                    var subUri = templateTagMatch.Groups["content"]?.Value;
+                    // fill placeholder for current uri
+                    if (subUri?.Contains("{uri{./}}") == true
+                        || subUri?.Contains("{uri{.}}") == true
+                        )
+                        subUri = subUri
+                            .Replace("{uri{./}}", AppDomain.CurrentDomain.BaseDirectory + "/")
+                            .Replace("{uri{.}}", AppDomain.CurrentDomain.BaseDirectory);
+
+                    if (!string.IsNullOrWhiteSpace(subUri)
+                        ||
+                        Uri.IsWellFormedUriString(subUri, UriKind.Absolute)
+                        )
+                    {
+                        var subTemplateContent = new Uri(subUri).RenderContent(
+                            queryParamsList,
+                            dataProviders,
+                            token,
+                            // todo: optional grab of referrer from regex sub-template tag
+                            referrer,
+                            userAgent
+                            );
+                        // replace sub-template tag with rendered sub-template content
+                        content = content.Replace(templateTagMatch.Value, subTemplateContent);
+                    }
+                    // sub-template tag removal if no valid uri was available
+                    else content = content.Replace(templateTagMatch.Value, "");
+                }
+                renderedContent = content;
+            }
+            #endregion
+
+
+            return renderedContent;
+
+        }
+
+
     }
 }

@@ -83,5 +83,65 @@ namespace Com.H.Reflection
 
         public static bool IsDefault<T>(this T value) where T : struct
             => value.Equals(default(T));
+
+
+        /// <summary>
+        /// Attempts to load assembly by either assembly name or dll path
+        /// </summary>
+        /// <param name="assemblyNameOrDllPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public static Assembly LoadAssembly(this string assemblyNameOrDllPath)
+        {
+            if (string.IsNullOrWhiteSpace(assemblyNameOrDllPath))
+                throw new ArgumentNullException($"{nameof(assemblyNameOrDllPath)} should not be null or white space");
+            // return the assembly if it is already loaded
+            Assembly? assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyNameOrDllPath);
+            if (assembly is not null) return assembly;
+
+            if (!File.Exists(assemblyNameOrDllPath))
+            {
+                var assemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, assemblyNameOrDllPath);
+                if (File.Exists(assemblyPath))
+                    assemblyNameOrDllPath = assemblyPath;
+                else
+                {
+                    var executableAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    if (executableAssemblyPath is not null)
+                    {
+                        assemblyPath = Path.Combine(executableAssemblyPath, assemblyNameOrDllPath);
+                        if (File.Exists(assemblyPath))
+                            assemblyNameOrDllPath = assemblyPath;
+                    }
+                }
+            }
+
+
+            if (File.Exists(assemblyNameOrDllPath))
+            {
+                try
+                {
+                    assembly = Assembly.LoadFrom(assemblyNameOrDllPath);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to load assembly from {assemblyNameOrDllPath} with error {ex.Message}");
+                }
+            }
+            else
+            {
+                try
+                {
+                    assembly = Assembly.Load(assemblyNameOrDllPath);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to load assembly {assemblyNameOrDllPath} with error {ex.Message}");
+                }
+            }
+            return assembly;
+
+        }
     }
 }

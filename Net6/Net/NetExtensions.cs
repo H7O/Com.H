@@ -46,8 +46,12 @@ namespace Com.H.Net
             )
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
-            if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
-            if (uri.Scheme?.EqualsIgnoreCase("file") == true)
+            // if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
+            if (!Uri.IsWellFormedUriString(uri.AbsoluteUri, UriKind.Absolute))
+                throw new FormatException(
+                    $"Invalid uri format : {uri.AbsoluteUri}");
+            //if (uri.Scheme?.EqualsIgnoreCase("file") == true)
+            if (uri.IsFile)
             {
                 if (!File.Exists(uri.LocalPath)) throw new FileNotFoundException($"File not found: {uri.LocalPath}", uri.LocalPath);
                 return cToken is null? await File.ReadAllTextAsync(uri.LocalPath)

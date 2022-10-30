@@ -16,6 +16,7 @@ namespace Com.H.Data
         public string? CloseMarker { get; set; } = "}}";
         public string? NullReplacement { get; set; } = "null";
         public static string RegexPattern { get; set; } = @"(?<param>.*?)?";
+        
     }
     public static class DataExtensions
     {

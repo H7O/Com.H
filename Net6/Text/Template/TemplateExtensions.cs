@@ -11,13 +11,15 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-
+using System.Xml.Linq;
 
 namespace Com.H.Text.Template
 {
     // note: fully working beta state (rough draft), requires refactoring and optimization before final release
 
 
+    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
+    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
 
     public class TemplateMultiDataRequest
     {
@@ -26,6 +28,7 @@ namespace Com.H.Text.Template
         public string? Request { get; set; }
         public bool PreRender { get; set; } = false;
         public IEnumerable<QueryParams>? QueryParamsList { get; set; }
+        public IDictionary<string, string?>? Attributes { get; set; }
         public CancellationToken? CancellationToken { get; set; }
     }
 
@@ -321,6 +324,17 @@ namespace Com.H.Text.Template
                 // get data if data request tags available
                 if (dataRequestMatch.Success)
                 {
+                    // todo: move pre-render, connection-string to headers
+
+
+                    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
+                    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
+
+                    Dictionary<string, string?> attribs =
+                        XElement.Parse(dataRequestMatch.Value)
+                        .Attributes().ToDictionary(key => key.Name.LocalName, v => (string?) v.Value);
+                        
+
                     // no pre-render data model before calling data providers
                     // (unless pre-render tag = true)
                     // as data model is submitted to data providers
@@ -332,6 +346,9 @@ namespace Com.H.Text.Template
                         ?? dataRequestMatch
                         .GetAttrib("pre_render") ?? "false"), out bool preRender);
 
+
+                    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
+                    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
                     dataResponse = dataProviders(new()
                     {
                         QueryParamsList = queryParamsList,
@@ -343,7 +360,9 @@ namespace Com.H.Text.Template
                             dataRequestMatch?.GetAttrib("content-type")
                             ?? dataRequestMatch?.GetAttrib("content_type"),
                         CancellationToken = token,
-                        PreRender = preRender
+                        PreRender = preRender,
+                        Attributes = attribs
+                        
                     });
 
                     

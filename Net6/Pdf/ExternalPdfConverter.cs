@@ -1,5 +1,7 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using Com.H.IO;
+using Com.H.Net;
 using Com.H.Runtime.InteropServices;
 using Com.H.Shell;
 using Com.H.Text;
@@ -77,9 +79,9 @@ namespace Com.H.Pdf
                 htmlTempPath
                 );
         }
-
-
-		public void HtmlToPdfFile(
+	
+        // root implementation
+        public void HtmlToPdfFile(
 			string htmlContent,
 			string outputFilePath,
 			string? htmlContentTempFilePath = null

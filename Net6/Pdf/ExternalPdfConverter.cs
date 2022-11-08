@@ -51,12 +51,15 @@ namespace Com.H.Pdf
             if (string.IsNullOrWhiteSpace(pdfTempFilePath)
                 )
             {
-                if (new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
-                    pdfTempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid()}.tmp.pdf");
+
+                if (new Uri(Path.GetTempPath()).IsWritableFolder())
+                    pdfTempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp.pdf");
 
                 if (string.IsNullOrWhiteSpace(pdfTempFilePath)
-                    && new Uri(Path.GetTempPath()).IsWritableFolder())
-                    pdfTempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp.pdf");
+                    &&
+                    new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
+                    pdfTempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid()}.tmp.pdf");
+
                 if (string.IsNullOrWhiteSpace(pdfTempFilePath))
                     throw new UnauthorizedAccessException(
                         $"Can't find a writable folder to save temporary PDF file, kindly set {nameof(pdfTempFilePath)} parameter pointing to a folder with write access");

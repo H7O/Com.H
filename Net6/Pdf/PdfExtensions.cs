@@ -59,35 +59,52 @@ namespace Com.H.Pdf
                 dataProviders, 
                 cToken);
 
-//            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath)
-//                &&
-//                    uri.IsFile
-//                    && uri.GetParentUri() is not null
-//                    && uri.GetParentUri().IsWritableFolder()
-//                )
-//            {
-//                // uri.GetParentUri() is not null here
-//#pragma warning disable CS8602 // Dereference of a possibly null reference.
-//                pdfTempOutputFilePath = Path.Combine(uri.GetParentUri().LocalPath, $"{new Guid().ToString()}.tmp.pdf");
-//#pragma warning restore CS8602 // Dereference of a possibly null reference.
-//            }
-            
+            //            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath)
+            //                &&
+            //                    uri.IsFile
+            //                    && uri.GetParentUri() is not null
+            //                    && uri.GetParentUri().IsWritableFolder()
+            //                )
+            //            {
+            //                // uri.GetParentUri() is not null here
+            //#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            //                pdfTempOutputFilePath = Path.Combine(uri.GetParentUri().LocalPath, $"{new Guid().ToString()}.tmp.pdf");
+            //#pragma warning restore CS8602 // Dereference of a possibly null reference.
+            //            }
 
 
-//            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath) 
-//                && new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
-//                pdfTempOutputFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid().ToString()}.tmp.pdf");
 
-//            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath)
-//                && new Uri(Path.GetTempPath()).IsWritableFolder())
-//                pdfTempOutputFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.tmp.pdf");
-            
-//            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath))
-//                throw new Exception("Could not determine a writable folder to create a temporary file for the PDF output.");
+            //            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath) 
+            //                && new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
+            //                pdfTempOutputFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid().ToString()}.tmp.pdf");
 
+            //            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath)
+            //                && new Uri(Path.GetTempPath()).IsWritableFolder())
+            //                pdfTempOutputFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid().ToString()}.tmp.pdf");
 
-            return new Uri(htmlContentTempFilePath)
-                .ToPdfStream(cToken);
+            //            if (string.IsNullOrWhiteSpace(pdfTempOutputFilePath))
+            //                throw new Exception("Could not determine a writable folder to create a temporary file for the PDF output.");
+
+            try
+            {
+
+                return new Uri(htmlContentTempFilePath)
+                    .ToPdfStream(cToken);
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                if (File.Exists(htmlContentTempFilePath))
+                    try
+                    {
+                        File.Delete(htmlContentTempFilePath);
+                    }
+                    catch { }
+            }
+        
         }
 
         private static string ToTempHtmlFile(
@@ -113,8 +130,8 @@ namespace Com.H.Pdf
             var htmlContent = uri.RenderContent(dataModel, openMarker, closemarker, nullReplacement, dataProviders, cToken);
             string? htmlContentTempFilePath = null;
             // if the URI is pointing to a local HTML template, see if the temporary rendered html can be written in the same folder as the URI html template.
-            if (uri.IsFile && uri.GetParentUri().IsWritableFolder())
-                htmlContentTempFilePath = Path.Combine(uri.LocalPath, $"{Guid.NewGuid()}.tmp.html");
+            if (uri.IsFile && uri.GetParentUri() is not null && uri.GetParentUri().IsWritableFolder())
+                htmlContentTempFilePath = Path.Combine(uri.GetParentUri().LocalPath, $"{Guid.NewGuid()}.tmp.html");
 
             if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)
                 && new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
@@ -173,45 +190,38 @@ namespace Com.H.Pdf
 
             #endregion
 
-            var htmlContent = uri.RenderContent(dataModel, openMarker, closemarker, nullReplacement, dataProviders, cToken);
-            string? htmlContentTempFilePath = null;
-            // if the URI is pointing to a local HTML template, see if the temporary rendered html can be written in the same folder as the URI html template.
-            if (uri.IsFile && uri.GetParentUri() is not null && uri.GetParentUri().IsWritableFolder())
-                htmlContentTempFilePath = Path.Combine(uri.GetParentUri().LocalPath, $"{Guid.NewGuid()}.tmp.html");
 
-            if (string.IsNullOrWhiteSpace(htmlContentTempFilePath) 
-                && new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
-                htmlContentTempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid()}.tmp.html");
 
-            if (string.IsNullOrWhiteSpace(htmlContentTempFilePath) 
-                && new Uri(Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp.html")).IsWritableFolder())
-                htmlContentTempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp.html");
+            string htmlContentTempFilePath = ToTempHtmlFile(
+                uri,
+                dataModel,
+                openMarker,
+                closemarker,
+                nullReplacement,
+                dataProviders,
+                cToken);
 
 
 
-
-            if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)
-                )
+            try
             {
-                if (new Uri(AppDomain.CurrentDomain.BaseDirectory).IsWritableFolder())
-                    htmlContentTempFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{Guid.NewGuid()}.tmp.html");
-
-                if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)
-                    && new Uri(Path.GetTempPath()).IsWritableFolder())
-                    htmlContentTempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.tmp.html");
-                if (string.IsNullOrWhiteSpace(htmlContentTempFilePath))
-                    throw new UnauthorizedAccessException(
-                        $"Can't find a writable folder to save temporary HTML file, kindly set {nameof(htmlContentTempFilePath)} parameter pointing to a folder with write access");
+                new Uri(htmlContentTempFilePath).ToPdfFile(pdfOutputFilePath, cToken, true);
             }
-            else
-                if (!new Uri(htmlContentTempFilePath).GetParentUri().IsWritableFolder())
-                throw new UnauthorizedAccessException(
-                    $"Unable to write to temp file {htmlContentTempFilePath} on folder {new Uri(htmlContentTempFilePath).GetParentUri()}, kindly set {nameof(htmlContentTempFilePath)} parameter pointing to a folder with write access");
-
-            File.WriteAllText(htmlContentTempFilePath, htmlContent);
-
-
-            new Uri(htmlContentTempFilePath).ToPdfFile(pdfOutputFilePath, cToken, true);
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                {
+                    if (File.Exists(htmlContentTempFilePath))
+                        try
+                        {
+                            File.Delete(htmlContentTempFilePath);
+                        }
+                        catch { }
+                }
+            }
 
         }
 

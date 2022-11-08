@@ -74,9 +74,10 @@ namespace Com.H.Text.Template
 
         #region derivative RenderContent implementations
 
+        
         public static string? RenderContent(
             this Uri uri,
-            object dataModel,
+            object? dataModel = null,
             string? openMarker = "{{",
             string? closemarker = "}}",
             string? nullReplacement = "null",
@@ -88,6 +89,7 @@ namespace Com.H.Text.Template
         {
             
             if (uri is null) throw new ArgumentNullException(nameof(uri));
+            
             
             List<QueryParams> queryParamsList = new List<QueryParams>()
             {
@@ -105,7 +107,6 @@ namespace Com.H.Text.Template
 
             if (queryParamsList?.Any() == true)
             {
-                //dataModelContainer.Data = dataModelContainer.Data.GetDataModelParameters();
                 // uri to use data model
                 uri = new Uri(uri.AbsoluteUri
                     .Fill(queryParamsList)
@@ -128,13 +129,15 @@ namespace Com.H.Text.Template
             
             if (string.IsNullOrEmpty(content)) return content;
 
-            var contentParentUri = uri.GetParentUri();
 
-            contentParentUri ??= new Uri(AppDomain.CurrentDomain.BaseDirectory);
+            var contentParentUri =
+                uri.IsFile ? uri.GetParentUri()
+                : new Uri(AppDomain.CurrentDomain.BaseDirectory);
 
+            
             return content.RenderContent(
                 queryParamsList,
-                contentParentUri.AbsoluteUri,
+                contentParentUri?.AbsoluteUri?? AppDomain.CurrentDomain.BaseDirectory,
                 dataProviders,
                 token,
                 referrer,

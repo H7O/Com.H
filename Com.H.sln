@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net5", "Net5\Net5.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Net6", "Net6\Net6.csproj", "{A5FEED4D-3DEE-4237-B487-443A92CA1BC6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetStandard2.0", "NetStandard2.0\NetStandard2.0.csproj", "{E6785800-264D-4628-BF4B-A0A3878023CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetStandard2.0", "NetStandard2.0\NetStandard2.0.csproj", "{E6785800-264D-4628-BF4B-A0A3878023CB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net7", "Net7\Net7.csproj", "{A59C229C-698E-4440-AFD9-AA194EBA796B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +29,10 @@ Global
 		{E6785800-264D-4628-BF4B-A0A3878023CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6785800-264D-4628-BF4B-A0A3878023CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6785800-264D-4628-BF4B-A0A3878023CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A59C229C-698E-4440-AFD9-AA194EBA796B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A59C229C-698E-4440-AFD9-AA194EBA796B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A59C229C-698E-4440-AFD9-AA194EBA796B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A59C229C-698E-4440-AFD9-AA194EBA796B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

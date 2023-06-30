@@ -50,7 +50,6 @@ namespace Com.H.Text.Template
         }
         #endregion
         
-
         private static string FillDates(this string content)
             =>content.FillDate(DateTime.Now, "{now{")
                 .FillDate(DateTime.Today.AddDays(1), "{tomorrow{")

@@ -19,16 +19,17 @@ namespace Com.H.Text
         /// <param name="stringToCompare"></param>
         /// <returns></returns>
         public static bool EqualsIgnoreCase(
-            this string? originalString,
-            string? stringToCompare)
-            =>
-            originalString?.IsNullEqual(stringToCompare) ??
-            // IsNullEquals ensures no scenario would result in originalString and/or stringToCompare are null
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
+            this string originalString,
+            string stringToCompare)
+        {
+            var isNullEqual = originalString.IsNullEqual(stringToCompare);
+            if (isNullEqual!=null) return isNullEqual.Value;
+            return  
                 originalString
                 .ToUpper(CultureInfo.InvariantCulture)
                 .Equals(stringToCompare.ToUpper(CultureInfo.InvariantCulture));
-#pragma warning restore CS8602 // Dereference of a possibly null reference.        
+
+        }
 
         /// <summary>
         /// Performs case insensitive StartsWith string comparison.
@@ -42,11 +43,15 @@ namespace Com.H.Text
             this string originalString,
             string stringToCompare
             )
-            => originalString.IsNullEqual(stringToCompare) ??
-                originalString
+        {
+            var isNullEqual = originalString.IsNullEqual(stringToCompare);
+            if (isNullEqual != null) return isNullEqual.Value;
+            return originalString
                 .ToUpper(CultureInfo.InvariantCulture)
                 .StartsWith(stringToCompare.ToUpper(CultureInfo.InvariantCulture),
                     StringComparison.InvariantCultureIgnoreCase);
+        }
+
 
         /// <summary>
         /// Performs case insensitive EndsWith string comparison.
@@ -60,11 +65,14 @@ namespace Com.H.Text
             this string originalString,
             string stringToCompare
             )
-            => originalString.IsNullEqual(stringToCompare) ??
-                originalString
+        {
+            var isNullEqual = originalString.IsNullEqual(stringToCompare);
+            if (isNullEqual != null) return isNullEqual.Value;
+            return originalString
                 .ToUpper(CultureInfo.InvariantCulture)
                 .EndsWith(stringToCompare.ToUpper(CultureInfo.InvariantCulture),
                     StringComparison.InvariantCultureIgnoreCase);
+        }
 
         /// <summary>
         /// Returns true if subString is found within originalString.
@@ -77,10 +85,13 @@ namespace Com.H.Text
         public static bool ContainsIgnoreCase(
             this string oringalString,
             string subString)
-            => oringalString.IsNullEqual(subString) ??
-                oringalString
+        {
+            var isNullEqual = oringalString.IsNullEqual(subString);
+            if (isNullEqual != null) return isNullEqual.Value;
+            return oringalString
                 .ToUpper(CultureInfo.InvariantCulture)
                 .Contains(subString.ToUpper(CultureInfo.InvariantCulture));
+        }
 
         /// <summary>
         /// Extract all occurances of integers from a string and return them in an IEnumerable of int.

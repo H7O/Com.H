@@ -1,22 +1,33 @@
 ﻿using Com.H.IO;
 using Com.H.Net;
 using Com.H.Text.Template;
-
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 
 namespace Com.H.Pdf
 {
     public static class PdfExtensions
     {
-        private static ExternalPdfConverter? _externalPdfConverter = null;
-        public static string? DefaultPdfConverterPath { get; set; }
-        public static string? DefaultPdfConverterParameters { get; set; }
-        private static ExternalPdfConverter ExtPdfConv => 
-            _externalPdfConverter ??= 
-                new ExternalPdfConverter() 
-                { 
-                    PdfConverterParameters = DefaultPdfConverterParameters, 
-                    PdfConverterPath = DefaultPdfConverterPath 
-                };
+        private static ExternalPdfConverter _externalPdfConverter = null;
+        public static string DefaultPdfConverterPath { get; set; }
+        public static string DefaultPdfConverterParameters { get; set; }
+        private static ExternalPdfConverter ExtPdfConv
+        {
+            get
+            {
+                if (_externalPdfConverter is null)
+                {
+                    _externalPdfConverter = new ExternalPdfConverter()
+                    {
+                        PdfConverterParameters = DefaultPdfConverterParameters,
+                        PdfConverterPath = DefaultPdfConverterPath
+                    };
+                }
+                return _externalPdfConverter;
+            }
+        }
 
         public static void ToPdfFile(
             this Uri uri, 
@@ -26,20 +37,19 @@ namespace Com.H.Pdf
             => ExtPdfConv.UriToPdfFile(uri, pdfFilePath, deleteInputFileAfterConversionProcess);
         public static FileStream ToPdfStream(
             this Uri uri, 
-            string? pdfTempFilePath = null
+            string pdfTempFilePath = null
             )
             => ExtPdfConv.UriToPdfStream(uri, pdfTempFilePath, true);
 
 
         public static FileStream ToRenderedPdfStream(
             this Uri uri,
-            object? dataModel = null,
-            string? openMarker = "{{",
-            string? closemarker = "}}",
-            string? nullReplacement = "null",
-            Func<TemplateMultiDataRequest, IEnumerable<dynamic>?>? dataProviders = null,
+            object dataModel = null,
+            string openMarker = "{{",
+            string closemarker = "}}",
+            string nullReplacement = "null",
+            Func<TemplateMultiDataRequest, IEnumerable<dynamic>> dataProviders = null,
             CancellationToken? cToken = null
-            // string? pdfTempOutputFilePath = null
             ) 
         {
             string htmlContentTempFilePath = ToTempHtmlFile(
@@ -89,11 +99,11 @@ namespace Com.H.Pdf
         private static string ToTempHtmlFile(
             this Uri uri, 
             // string pdfOutputFilePath, 
-            object? dataModel = null, 
-            string? openMarker = "{{", 
-            string? closemarker = "}}", 
-            string? nullReplacement = "null", 
-            Func<TemplateMultiDataRequest, IEnumerable<dynamic>?>? dataProviders = null, 
+            object dataModel = null, 
+            string openMarker = "{{", 
+            string closemarker = "}}", 
+            string nullReplacement = "null", 
+            Func<TemplateMultiDataRequest, IEnumerable<dynamic>> dataProviders = null, 
             CancellationToken? cToken = null)
         {
             #region check arguments
@@ -107,13 +117,13 @@ namespace Com.H.Pdf
             #endregion
 
             var htmlContent = uri.RenderContent(dataModel, openMarker, closemarker, nullReplacement, dataProviders, cToken);
-            string? htmlContentTempFilePath = null;
+            string htmlContentTempFilePath = null;
             // if the URI is pointing to a local HTML template, see if the temporary rendered html can be written in the same folder as the URI html template.
-            if (uri.IsFile && uri.GetParentUri() is not null && uri.GetParentUri().IsWritableFolder())
+            if (uri.IsFile && uri.GetParentUri() !=null && uri.GetParentUri().IsWritableFolder())
                 // uri.GetParentUri() is not null here
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
+
                 htmlContentTempFilePath = Path.Combine(uri.GetParentUri().LocalPath, $"{Guid.NewGuid()}.tmp.html");
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
+
 
             // if the URI is pointing is either not pointing to a local file or the parent folder is not writable, see if the temporary rendered html can be written in the current application folder.
             if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)
@@ -152,11 +162,11 @@ namespace Com.H.Pdf
         public static void ToRenderedPdfFile(
             this Uri uri,
             string pdfOutputFilePath,
-            object? dataModel = null,
-            string? openMarker = "{{",
-            string? closemarker = "}}",
-            string? nullReplacement = "null",
-            Func<TemplateMultiDataRequest, IEnumerable<dynamic>?>? dataProviders = null,
+            object dataModel = null,
+            string openMarker = "{{",
+            string closemarker = "}}",
+            string nullReplacement = "null",
+            Func<TemplateMultiDataRequest, IEnumerable<dynamic>> dataProviders = null,
             CancellationToken? cToken = null
             )
         {

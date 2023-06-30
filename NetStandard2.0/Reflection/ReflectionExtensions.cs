@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -28,7 +29,7 @@ namespace Com.H.Reflection
             => _mapper.Clone<T>(source);
 
         public static IEnumerable<T> Map<T>(this IEnumerable<object> source)
-            => source==null?null:_mapper.Map<T>(source);
+            => source == null ? null : _mapper.Map<T>(source);
 
         public static void FillWith(
             this object destination,
@@ -51,9 +52,9 @@ namespace Com.H.Reflection
         public static IEnumerable<TValue> OrdinallyMappedFilteredValues<TKey, TValue, TOKey>(
             IDictionary<TKey, TValue> dictionary, IEnumerable<TOKey> oFilter) 
         =>
-            oFilter is null?dictionary.Values.AsEnumerable()
-            :oFilter.Where(x=>x != null).Join(dictionary, o => o.Map<TKey>(), d => d.Key, (o, d) => d.Value);
-        
+            oFilter is null ? dictionary.Values.AsEnumerable()
+            : oFilter.Where(x => x != null).Join(dictionary, o => o.Map<TKey>(), d => d.Key, (o, d) => d.Value);
+
 
 
         public static IEnumerable<(string Name, PropertyInfo Info)> GetProperties(this ExpandoObject expando)
@@ -83,5 +84,65 @@ namespace Com.H.Reflection
 
         public static bool IsDefault<T>(this T value) where T : struct
             => value.Equals(default(T));
+
+
+        /// <summary>
+        /// Attempts to load assembly by either assembly name or dll path
+        /// </summary>
+        /// <param name="assemblyNameOrDllPath"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="Exception"></exception>
+        public static Assembly LoadAssembly(this string assemblyNameOrDllPath)
+        {
+            if (string.IsNullOrWhiteSpace(assemblyNameOrDllPath))
+                throw new ArgumentNullException($"{nameof(assemblyNameOrDllPath)} should not be null or white space");
+            // return the assembly if it is already loaded
+            Assembly assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyNameOrDllPath);
+            if (assembly != null) return assembly;
+
+            if (!File.Exists(assemblyNameOrDllPath))
+            {
+                var assemblyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, assemblyNameOrDllPath);
+                if (File.Exists(assemblyPath))
+                    assemblyNameOrDllPath = assemblyPath;
+                else
+                {
+                    var executableAssemblyPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    if (executableAssemblyPath != null)
+                    {
+                        assemblyPath = Path.Combine(executableAssemblyPath, assemblyNameOrDllPath);
+                        if (File.Exists(assemblyPath))
+                            assemblyNameOrDllPath = assemblyPath;
+                    }
+                }
+            }
+
+
+            if (File.Exists(assemblyNameOrDllPath))
+            {
+                try
+                {
+                    assembly = Assembly.LoadFrom(assemblyNameOrDllPath);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to load assembly from {assemblyNameOrDllPath} with error {ex.Message}");
+                }
+            }
+            else
+            {
+                try
+                {
+                    assembly = Assembly.Load(assemblyNameOrDllPath);
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Failed to load assembly {assemblyNameOrDllPath} with error {ex.Message}");
+                }
+            }
+            return assembly;
+
+        }
     }
 }

@@ -95,7 +95,7 @@ namespace Com.H.Reflection
         public static Assembly LoadAssembly(this string assemblyNameOrDllPath)
         {
             if (string.IsNullOrWhiteSpace(assemblyNameOrDllPath))
-                throw new ArgumentNullException($"{nameof(assemblyNameOrDllPath)} should not be null or white space");
+                throw new($"{nameof(assemblyNameOrDllPath)} should not be null or white space");
             // return the assembly if it is already loaded
             Assembly? assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyNameOrDllPath);
             if (assembly is not null) return assembly;

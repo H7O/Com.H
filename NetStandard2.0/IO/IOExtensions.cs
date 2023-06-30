@@ -187,7 +187,36 @@ namespace Com.H.IO
         //}
 
         public static MemoryStream ToMemoryStream(this string content, Encoding encoding = null)
-            => new MemoryStream((encoding??Encoding.UTF8).GetBytes(content));
+        {
+            if (string.IsNullOrWhiteSpace(content)) return null;
+            return new MemoryStream((encoding??Encoding.UTF8).GetBytes(content));
+        }
+
+        public static bool IsWritableFolder(this Uri uri)
+        {
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            if (!uri.IsFile) return false;
+            return IsWritableFolder(uri.LocalPath);
+        }
+        public static bool IsWritableFolder(this string folderPath)
+        {
+            if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentNullException(nameof(folderPath));
+            try
+            {
+                using (FileStream fs = File.Create(
+                    Path.Combine(
+                        folderPath,
+                        Path.GetRandomFileName()
+                    ),
+                    1,
+                    FileOptions.DeleteOnClose)
+                )
+                {}
+                return true;
+            }
+            catch { }
+            return false;
+        }
 
     }
 }

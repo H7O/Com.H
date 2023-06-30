@@ -1,22 +1,13 @@
 ﻿using Com.H.Data;
 using Com.H.Linq;
 using Com.H.Net;
-using Com.H.Text;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace Com.H.Text.Template
 {
     // note: fully working beta state (rough draft), requires refactoring and optimization before final release
-
 
     // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
     // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
@@ -58,12 +49,6 @@ namespace Com.H.Text.Template
             return subMatch.Groups["val"]?.Value;
         }
         #endregion
-
-
-        
-
-
-
         
 
         private static string FillDates(this string content)
@@ -73,8 +58,13 @@ namespace Com.H.Text.Template
 
 
         #region derivative RenderContent implementations
+        // 0
+        public static string? RenderContent(this Uri uri)
+        {
+            return uri.RenderContent(null, "{{", "}}", "null");
+        }
 
-        
+        // 1
         public static string? RenderContent(
             this Uri uri,
             object? dataModel = null,
@@ -91,7 +81,7 @@ namespace Com.H.Text.Template
             if (uri is null) throw new ArgumentNullException(nameof(uri));
             
             
-            List<QueryParams> queryParamsList = new List<QueryParams>()
+            List<QueryParams> queryParamsList = new()
             {
                 new QueryParams()
                 {
@@ -150,7 +140,7 @@ namespace Com.H.Text.Template
 
         public static string? RenderContent(
             this string content,
-            object dataModel,
+            object? dataModel = null,
             string? openMarker = "{{",
             string? closemarker = "}}",
             string? nullReplacement = "null",
@@ -162,7 +152,7 @@ namespace Com.H.Text.Template
             )
         {
             if (string.IsNullOrWhiteSpace(content)) return content;
-            List<QueryParams> queryParamList = new List<QueryParams>()
+            List<QueryParams> queryParamList = new()
             {
                 new QueryParams()
                 {
@@ -206,7 +196,7 @@ namespace Com.H.Text.Template
                 );
         }
 
-
+        // 2
         public static string? RenderContent(
         this Uri uri,
         List<QueryParams>? queryParamsList = null,
@@ -398,7 +388,7 @@ namespace Com.H.Text.Template
             string renderedContent = "";
             if (dataResponse is not null)
             {
-                if (queryParamsList is null) queryParamsList = new();
+                queryParamsList ??= new();
                 foreach (var item in dataResponse.EnsureEnumerable())
                 {
                     // todo: replace with markers from regex, failover to 
@@ -487,35 +477,6 @@ namespace Com.H.Text.Template
                         userAgent
                         );
                         
-                    #region replaced by refactored method
-                    //var subUri = templateTagMatch.Groups["content"]?.Value;
-                    //// fill placeholder for current uri
-                    //if (subUri?.Contains("{uri{./}}") == true
-                    //    || subUri?.Contains("{uri{.}}") == true
-                    //    )
-                    //    subUri = subUri
-                    //        .Replace("{uri{./}}", parentUri.AbsoluteUri)
-                    //        .Replace("{uri{.}}", parentUri.AbsoluteUri.RemoveLast(1));
-
-                    //if (!string.IsNullOrWhiteSpace(subUri)
-                    //    ||
-                    //    Uri.IsWellFormedUriString(subUri, UriKind.Absolute)
-                    //    )
-                    //{
-                    //    var subTemplateContent = new Uri(subUri).RenderContent(
-                    //        queryParamsList,
-                    //        dataProviders,
-                    //        token,
-                    //        // todo: optional grab of referrer from regex sub-template tag
-                    //        referrer,
-                    //        userAgent
-                    //        );
-                    //    // replace sub-template tag with rendered sub-template content
-                    //    content = content.Replace(templateTagMatch.Value, subTemplateContent);
-                    //}
-                    //// sub-template tag removal if no valid uri was available
-                    //else content = content.Replace(templateTagMatch.Value, "");
-                    #endregion
                 }
                 renderedContent = content;
             }
@@ -567,8 +528,6 @@ namespace Com.H.Text.Template
             return content;
         }
 
-
-
         #endregion
 
         #region creating default template data processor
@@ -602,16 +561,11 @@ namespace Com.H.Text.Template
                     + "Also, make sure to have either NuGet package Microsoft.EntityFrameworkCore.SqlServer "
                     + "or Microsoft.EntityFrameworkCore.Sqlite installed, depending on your database provider.");
 
-            var classType = assembly.GetType("Com.H.EF.Relational.QueryExtensions");
-            if (classType is null)
-                //return null;
-                throw new NotSupportedException("Couldn't find class Com.H.EF.Relational.QueryExtensions"
+            var classType = assembly.GetType("Com.H.EF.Relational.QueryExtensions") 
+                ?? throw new NotSupportedException("Couldn't find class Com.H.EF.Relational.QueryExtensions"
                     + " in assembly Com.H.EF.Relational");
-
-            var method = classType.GetMethod("GetDefaultDataProcessors", new Type[] { typeof(TemplateMultiDataRequest) });
-            if (method is null)
-                //return null;
-                throw new NotSupportedException("Couldn't find method GetDefaultDataProcessors in class Com.H.EF.Relational.QueryExtensions"
+            var method = classType.GetMethod("GetDefaultDataProcessors", new Type[] { typeof(TemplateMultiDataRequest) }) 
+                ?? throw new NotSupportedException("Couldn't find method GetDefaultDataProcessors in class Com.H.EF.Relational.QueryExtensions"
                     + " in assembly Com.H.EF.Relational");
             var args = new object[] { req };
             var result = method.Invoke(null, args);
@@ -620,7 +574,6 @@ namespace Com.H.Text.Template
         }
 
 
-        
         #endregion
 
 

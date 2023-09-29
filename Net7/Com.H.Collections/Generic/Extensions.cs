@@ -21,7 +21,10 @@ namespace Com.H.Collections.Generic
         public static IEnumerable<dynamic> ToChamberedEnumerable(
             this IEnumerable<dynamic> enumerable)
         {
-
+            if (enumerable is null)
+            {
+                throw new ArgumentNullException(nameof(enumerable));
+            }
             var enumerator = enumerable.GetEnumerator();
             if (enumerator.MoveNext())
             {

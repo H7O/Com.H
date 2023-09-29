@@ -19,11 +19,11 @@ namespace Com.H.Collections.Generic
         /// <param name="enumerable"></param>
         /// <returns></returns>
         public static IEnumerable<dynamic> ToChamberedEnumerable(
-            this IEnumerable<dynamic> enumerable)
+            this IEnumerable<dynamic>? enumerable)
         {
             if (enumerable is null)
             {
-                throw new ArgumentNullException(nameof(enumerable));
+                return Enumerable.Empty<dynamic>();
             }
             var enumerator = enumerable.GetEnumerator();
             if (enumerator.MoveNext())
@@ -43,7 +43,7 @@ namespace Com.H.Collections.Generic
         /// <param name="enumerator"></param>
         /// <returns></returns>
         public static IEnumerable<dynamic> RemainingItems(
-            this IEnumerator<dynamic> enumerator)
+            this IEnumerator<dynamic>? enumerator)
         {
             if (enumerator is not null)
             {

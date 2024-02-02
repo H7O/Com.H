@@ -22,8 +22,7 @@ namespace Com.H.IO
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
             if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 throw new ArgumentException($"{nameof(path)} contains invalid characters.");
-            var parentFolder = Directory.GetParent(path)?.FullName;
-            if (parentFolder == null) throw new ArgumentException($"Can't find parent folder of '{path}'");
+            var parentFolder = (Directory.GetParent(path)?.FullName) ?? throw new ArgumentException($"Can't find parent folder of '{path}'");
             if (Directory.Exists(parentFolder))
                 return path;
             Directory.CreateDirectory(parentFolder);
@@ -191,7 +190,7 @@ namespace Com.H.IO
 
         public static bool IsWritableFolder(this Uri? uri)
         {
-            if (uri == null) throw new ArgumentNullException(nameof(uri));
+            ArgumentNullException.ThrowIfNull(uri);
             if (!uri.IsFile) return false;
             return IsWritableFolder(uri.LocalPath);
         }
@@ -200,15 +199,13 @@ namespace Com.H.IO
             if (string.IsNullOrWhiteSpace(folderPath)) throw new ArgumentNullException(nameof(folderPath));
             try
             {
-                using (FileStream fs = File.Create(
+                using FileStream fs = File.Create(
                     Path.Combine(
                         folderPath,
                         Path.GetRandomFileName()
                     ),
                     1,
-                    FileOptions.DeleteOnClose)
-                )
-                { }
+                    FileOptions.DeleteOnClose);
                 return true;
             }
             catch { }
@@ -225,10 +222,8 @@ namespace Com.H.IO
             {
                 // check if it's a folder
                 if (Directory.Exists(path)) return false;
-                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
-                {
-                    return false; // the file is not in use
-                }
+                using FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                return false; // the file is not in use
             }
             catch (IOException)
             {
@@ -244,8 +239,8 @@ namespace Com.H.IO
         /// <exception cref="ArgumentNullException"></exception>
         public static bool IsFileInUse(this FileInfo fileInfo)
         {
-            if (fileInfo == null) throw new ArgumentNullException(nameof(fileInfo));
-            return IsFileInUse(fileInfo.FullName);
+            return fileInfo == null ? throw new ArgumentNullException(nameof(fileInfo)) 
+                : IsFileInUse(fileInfo.FullName);
         }
     }
 }

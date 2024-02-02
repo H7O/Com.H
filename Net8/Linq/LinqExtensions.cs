@@ -117,7 +117,8 @@ namespace Com.H.Linq
                 || pathDelimiters == null
                 || pathDelimiters.Length < 1
                 ? default
-            : traversableItem.FindDescendant(path, findChild, pathDelimiters.Cast<string>().ToArray(), checkRoot);
+            : traversableItem.FindDescendant(path, findChild, 
+                pathDelimiters.Select(x=>x.ToString()).ToArray(), checkRoot);
 
 
 
@@ -203,7 +204,8 @@ namespace Com.H.Linq
                       : FindDescendants(traversableItem, 
                       path, 
                       findChildren, 
-                      pathDelimiters.Cast<string>().ToArray(),
+                      pathDelimiters.Select(x=>x.ToString()).ToArray(),
+                          // .Cast<string>().ToArray(),
                       checkRoot);
 
 
@@ -227,14 +229,9 @@ namespace Com.H.Linq
             Func<TAccumulate?, TSource?, TAccumulate?> func,
             Func<TAccumulate?, TSource?, bool> untilCheck)
         {
-            if (source is null)
-                throw new ArgumentNullException(nameof(source));
-
-            if (func is null)
-                throw new ArgumentNullException(nameof(func));
-
-            if (untilCheck is null)
-                throw new ArgumentNullException(nameof(untilCheck));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(func);
+            ArgumentNullException.ThrowIfNull(untilCheck);
 
             _ = source.Any(x => untilCheck(seed = func(seed, x), x));
 
@@ -247,14 +244,10 @@ namespace Com.H.Linq
             Func<TAccumulate?, TSource?, TAccumulate?> func,
             Func<TAccumulate?, TSource?, bool> whileCheck)
         {
-            if (source is null)
-                throw new ArgumentNullException(nameof(source));
-
-            if (func is null)
-                throw new ArgumentNullException(nameof(func));
-
-            if (whileCheck is null)
-                throw new ArgumentNullException(nameof(whileCheck));
+            ArgumentNullException.ThrowIfNull(source);
+            ArgumentNullException.ThrowIfNull(func);
+            ArgumentNullException.ThrowIfNull(whileCheck);
+            
             foreach (var item in source)
             {
                 if (!whileCheck(seed, item)) return seed;

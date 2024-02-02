@@ -160,5 +160,8 @@ namespace Com.H.Collections.Concurrent
             =>
             this._dic.Select(x => new KeyValuePair<TKey, TValue?>(x.Key, x.Value.Value))
                 .GetEnumerator();
+
+        public void Clear()
+            => this._dic.Clear();
     }
 }

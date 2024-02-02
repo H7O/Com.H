@@ -40,7 +40,7 @@ namespace Com.H.IO
                 Path.Combine(dateTime.ToString("yyyy"),
                                 dateTime.ToString("MMM"),
                                 dateTime.ToString("dd"));
-        
+
         /// <summary>
         /// Formats DateTime to directory path string yyyy/MMM/dd (or yyyy\MMM\dd depending on host OS) 
         /// </summary>
@@ -66,7 +66,7 @@ namespace Com.H.IO
         /// <param name="basePath"></param>
         /// <returns></returns>
         public static string GetTempFilePath(string? basePath = null)
-            => Path.Combine(basePath??Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
+            => Path.Combine(basePath ?? Path.GetTempPath(), $"{Guid.NewGuid()}.tmp");
 
         /// <summary>
         /// Spins a task to attempt deleting an exclusively open file.
@@ -79,21 +79,21 @@ namespace Com.H.IO
         public static Task PersistantDelete(
             this string path,
             int deleteAttempts = 5,
-            int intervalBetweenAttempts = 1000, 
+            int intervalBetweenAttempts = 1000,
             CancellationToken? token = null)
         {
             if (string.IsNullOrEmpty(path)) return Task.CompletedTask;
             if (deleteAttempts < 1) deleteAttempts = 1;
             void Delay()
                 =>
-                (token == null?Task.Delay(intervalBetweenAttempts) :
+                (token == null ? Task.Delay(intervalBetweenAttempts) :
                     Task.Delay(intervalBetweenAttempts, (CancellationToken)token))
                         .GetAwaiter().GetResult();
 
             bool IsCancelled() => token != null
                             &&
                             ((CancellationToken)token).IsCancellationRequested;
-            
+
             void Delete()
             {
                 int persist = 1;
@@ -138,8 +138,8 @@ namespace Com.H.IO
         /// <param name="regexFilter"></param>
         /// <returns></returns>
         public static IEnumerable<FileInfo> ListFiles(
-            this string basePath, 
-            bool recursion = false, 
+            this string basePath,
+            bool recursion = false,
             string? regexFilter = null)
         {
             if (string.IsNullOrWhiteSpace(basePath)) yield break;
@@ -149,12 +149,12 @@ namespace Com.H.IO
                     yield return new FileInfo(basePath);
                 yield break;
             }
-            
+
             if (Directory.Exists(basePath))
             {
                 foreach (var fInfo in Directory.GetFiles(basePath)
                     .Union(Directory.GetDirectories(basePath))
-                    .Where(x=>recursion || !Directory.Exists(x))
+                    .Where(x => recursion || !Directory.Exists(x))
                     .SelectMany(x => ListFiles(x, recursion, regexFilter)))
                     yield return fInfo;
             }
@@ -168,7 +168,7 @@ namespace Com.H.IO
             var oldPath = path;
             // string pathSeperator = Path.DirectorySeparatorChar + "";
             //string altSeperator = pathSeperator.Equals("/") ? "\\" : "/";
-            path = path.Replace(Path.AltDirectorySeparatorChar, 
+            path = path.Replace(Path.AltDirectorySeparatorChar,
                 Path.DirectorySeparatorChar)
                 .Replace("" + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar,
                 Path.DirectorySeparatorChar + "");
@@ -187,7 +187,7 @@ namespace Com.H.IO
         //}
 
         public static MemoryStream ToMemoryStream(this string content, Encoding? encoding = null)
-            => new ((encoding??Encoding.UTF8).GetBytes(content));
+            => new((encoding ?? Encoding.UTF8).GetBytes(content));
 
         public static bool IsWritableFolder(this Uri? uri)
         {
@@ -208,12 +208,44 @@ namespace Com.H.IO
                     1,
                     FileOptions.DeleteOnClose)
                 )
-                {}
+                { }
                 return true;
             }
             catch { }
             return false;
         }
+        /// <summary>
+        /// Check if a file is in use by another process
+        /// </summary>
+        /// <param name="path">The path of the file to check</param>
+        /// <returns>Returns true if the file is in use</returns>
+        public static bool IsFileInUse(this string path)
+        {
+            try
+            {
+                // check if it's a folder
+                if (Directory.Exists(path)) return false;
+                using (FileStream fs = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    return false; // the file is not in use
+                }
+            }
+            catch (IOException)
+            {
+                return true; // the file is in use
+            }
+        }
 
+        /// <summary>
+        /// Check if a file is in use by another process
+        /// </summary>
+        /// <param name="fileInfo">The file to check</param>
+        /// <returns>Returns true if the file is in use</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static bool IsFileInUse(this FileInfo fileInfo)
+        {
+            if (fileInfo == null) throw new ArgumentNullException(nameof(fileInfo));
+            return IsFileInUse(fileInfo.FullName);
+        }
     }
 }

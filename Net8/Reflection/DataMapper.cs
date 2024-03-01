@@ -38,9 +38,16 @@ namespace Com.H.Reflection
         {
             foreach (var p in type.GetProperties())
             {
-                ColumnAttribute? c_name = (ColumnAttribute?)p
-                    .GetCustomAttributes(typeof(ColumnAttribute), false).FirstOrDefault();
-                yield return (c_name?.Name??p.Name, p);
+                //ColumnAttribute? c_name = (ColumnAttribute?)p
+                //    .GetCustomAttributes(typeof(ColumnAttribute), false).FirstOrDefault();
+
+                var c_attr = p.GetCustomAttributes(false)
+                    .FirstOrDefault(x => x.GetType().Name.Equals("DataMemberAttribute")) ??
+                    p.GetCustomAttributes(false)
+                    .FirstOrDefault(x => x.GetType().Name.Equals("JsonPropertyNameAttribute"));
+
+                // yield return (c_name?.Name??p.Name, p);
+                yield return (c_attr?.GetType().GetProperty("Name")?.GetValue(c_attr)?.ToString() ?? p.Name, p);
             }
 
         }

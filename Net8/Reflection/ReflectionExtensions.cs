@@ -143,5 +143,15 @@ namespace Com.H.Reflection
             return assembly;
 
         }
+
+        public static Dictionary<string, int> GetEnumIntValues<TEnum>() where TEnum : Enum
+        {
+            var enumType = typeof(TEnum);
+            if (!enumType.IsEnum) throw new ArgumentException($"{enumType.Name} is not an enum type");
+            // check if underlying type is int
+            if (Enum.GetUnderlyingType(enumType) != typeof(int))
+                throw new ArgumentException($"{enumType.Name} is not an enum of int type");
+            return Enum.GetValues(enumType).Cast<TEnum>().ToDictionary(k => k.ToString(), v => (int)(object)v);
+        }
     }
 }

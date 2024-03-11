@@ -25,8 +25,12 @@ namespace Com.H.IO.InProgress
                 }
             }
         }
-
-        public FileWatcherExInfo(FileSystemEventArgs args, FileInfo info)
+        /// <summary>
+        /// Still in progress, don't use this class yet.
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="info"></param>
+        internal FileWatcherExInfo(FileSystemEventArgs args, FileInfo info)
         {
             this.Args = args;
             this.Info = info;
@@ -39,7 +43,7 @@ namespace Com.H.IO.InProgress
             }
         }
     }
-    public class FileSystemWatcherEx : IDisposable
+    internal class FileSystemWatcherEx : IDisposable
     {
         #region properties
         private readonly FileSystemWatcher _watcher;

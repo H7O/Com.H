@@ -19,7 +19,7 @@ namespace Com.H.Collections.Concurrent
         public LazyConcurrentDictionary()
         { }
 
-        public LazyConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue?>> keyValuePairs)
+        public LazyConcurrentDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
         => this._dic = new ConcurrentDictionary<TKey, Lazy<TValue?>>(
             keyValuePairs.Select(x =>
                     new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
@@ -49,7 +49,6 @@ namespace Com.H.Collections.Concurrent
         public int Count => this._dic.Count;
 
         public TValue? AddOrUpdate(TKey key, TValue? value, Func<TKey, TValue?, TValue?> updateValueFactory)
-            
             => this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue?>(value),

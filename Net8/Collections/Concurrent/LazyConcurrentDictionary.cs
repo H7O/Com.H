@@ -25,6 +25,12 @@ namespace Com.H.Collections.Concurrent
                     new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
             ));
 
+        public LazyConcurrentDictionary(IDictionary<TKey, TValue> dic)
+            => this._dic = new ConcurrentDictionary<TKey, Lazy<TValue?>>(
+                dic.Select(x =>
+                    new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
+                ));
+
         public TValue? this[TKey key]
         {
             get

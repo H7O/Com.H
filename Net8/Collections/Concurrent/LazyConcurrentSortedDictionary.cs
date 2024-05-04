@@ -29,10 +29,10 @@ namespace Com.H.Collections.Concurrent
 
         public LazyConcurrentSortedDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs, IComparer<TKey> comparer)
         {
-            this._dic = new ConcurrentSortedDictionary<TKey, Lazy<TValue?>>(comparer,
-                    keyValuePairs.Select(x =>
-                            new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
-                                            ));
+            this._dic = new ConcurrentSortedDictionary<TKey, Lazy<TValue?>>(
+                 keyValuePairs.Select(x =>
+                    new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
+                    ), comparer);
         }
 
         public LazyConcurrentSortedDictionary(IDictionary<TKey, TValue> dic)

@@ -28,7 +28,8 @@ namespace Com.H.Collections.Concurrent
         {
             this._dic = new SortedDictionary<TKey, TValue>(comparer);
         }
-        public ConcurrentSortedDictionary(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
+        public ConcurrentSortedDictionary(
+            IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
         {
             this._dic = new SortedDictionary<TKey, TValue>();
             foreach (var kv in keyValuePairs)
@@ -37,13 +38,19 @@ namespace Com.H.Collections.Concurrent
             }
         }
 
-        public ConcurrentSortedDictionary(IDictionary<TKey, TValue> dic, IComparer<TKey> comparer)
+        public ConcurrentSortedDictionary(
+            IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs,
+            IComparer<TKey> comparer)
+            
         {
-            this._dic = new SortedDictionary<TKey, TValue>(comparer);
-            foreach (var kv in dic)
-            {
-                this._dic.Add(kv.Key, kv.Value);
-            }
+            this._dic = new SortedDictionary<TKey, TValue>(
+                keyValuePairs.ToDictionary(x => x.Key, x => x.Value), comparer);
+        }
+
+        public ConcurrentSortedDictionary(IDictionary<TKey, TValue> dic, 
+            IComparer<TKey> comparer)
+        {
+            this._dic = new SortedDictionary<TKey, TValue>(dic, comparer);
         }
 
         public TValue this[TKey key]

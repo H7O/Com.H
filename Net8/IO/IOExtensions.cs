@@ -102,7 +102,7 @@ namespace Com.H.IO
                     {
                         Directory.Delete(path, true);
                     }
-                    catch { Console.WriteLine("nope"); }
+                    catch { }
                     if ((persist++) >= deleteAttempts) return;
                     Delay();
                     if (IsCancelled()) return;

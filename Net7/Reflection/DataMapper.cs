@@ -95,7 +95,6 @@ namespace Com.H.Reflection
 
             var srcProperties = this.GetCachedProperties(source.GetType());
             var dstProperties = this.GetCachedProperties(typeof(T));
-            // Console.WriteLine(dstProperties.Count());
 
             var joined = dstProperties.LeftJoin(
                 srcProperties,
@@ -104,7 +103,6 @@ namespace Com.H.Reflection
                 (dst, src) => new { dst, src }
             ).Where(x => x.src.Info != null);
 
-            // Console.WriteLine(joined.Count);
 
             T destination = Activator.CreateInstance<T>();
 
@@ -112,7 +110,6 @@ namespace Com.H.Reflection
             {
                 try
                 {
-                    // Console.WriteLine($"src: {item.src.Name} = {item.src.Info?.GetValue(source)}");
                     var val = item.src.Info.GetValue(source);
 
                     if (val is null) continue; 
@@ -123,12 +120,10 @@ namespace Com.H.Reflection
                             Convert.ChangeType(val,
                             item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
                         );
-                    // Console.WriteLine($"dst: {item.dst.Name} = {item.dst.Info?.GetValue(source)}");
 
                 }
-                catch // (Exception ex) 
+                catch 
                 {
-                    // Console.WriteLine("DataMapper: " + ex.Message);
                 }
             }
             return destination;

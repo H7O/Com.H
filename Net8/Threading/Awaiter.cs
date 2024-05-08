@@ -92,7 +92,7 @@ namespace Com.H.Threading
 
 
 
-        public async Task WaitFor(object lockObj, CancellationToken cToken)
+        public async Task WaitFor(object lockObj, CancellationToken? cToken)
         => await this.WaitFor(lockObj, null, cToken);
         
 

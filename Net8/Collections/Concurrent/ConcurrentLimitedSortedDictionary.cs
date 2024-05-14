@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
+using Com.H.Collections.Generic;
 
 namespace Com.H.Collections.Concurrent
 {
@@ -14,46 +15,58 @@ namespace Com.H.Collections.Concurrent
     /// </summary>
     /// <typeparam name="TKey"></typeparam>
     /// <typeparam name="TValue"></typeparam>
-    public class ConcurrentSortedDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> where TKey : notnull
+    public class ConcurrentLimitedSortedDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> where TKey : IComparable<TKey>
     {
-        private SortedDictionary<TKey, TValue> _dic;
+        private LimitedSortedDictionary<TKey, TValue> _dic;
         private readonly ReaderWriterLockSlim _lock = new();
 
-        public ConcurrentSortedDictionary()
+        public ConcurrentLimitedSortedDictionary(int limit)
         {
-            this._dic = new SortedDictionary<TKey, TValue>();
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
+            }
+
+            this._dic = new LimitedSortedDictionary<TKey, TValue>(limit);
         }
 
-        public ConcurrentSortedDictionary(IComparer<TKey> comparer)
+        public ConcurrentLimitedSortedDictionary(int limit, IComparer<TKey> comparer)
         {
-            this._dic = new SortedDictionary<TKey, TValue>(comparer);
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
+            }
+            this._dic = new LimitedSortedDictionary<TKey, TValue>(limit, comparer);
         }
-        public ConcurrentSortedDictionary(
+        public ConcurrentLimitedSortedDictionary(
+            int limit,
             IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs)
         {
-            this._dic = new SortedDictionary<TKey, TValue>(
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
+            }
+            this._dic = new LimitedSortedDictionary<TKey, TValue>(
+                limit,
                 keyValuePairs.ToDictionary(x => x.Key, x => x.Value)
                 );
-            //foreach (var kv in keyValuePairs)
-            //{
-            //    this._dic.Add(kv.Key, kv.Value);
-            //}
         }
 
-        public ConcurrentSortedDictionary(
+        public ConcurrentLimitedSortedDictionary(
+            int limit,
             IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs,
             IComparer<TKey> comparer)
-            
+
         {
-            this._dic = new SortedDictionary<TKey, TValue>(
+            if (limit <= 0)
+            {
+                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
+            }
+            this._dic = new LimitedSortedDictionary<TKey, TValue>(
+                limit,
                 keyValuePairs.ToDictionary(x => x.Key, x => x.Value), comparer);
         }
 
-        public ConcurrentSortedDictionary(IDictionary<TKey, TValue> dic, 
-            IComparer<TKey> comparer)
-        {
-            this._dic = new SortedDictionary<TKey, TValue>(dic, comparer);
-        }
 
         public TValue this[TKey key]
         {
@@ -313,7 +326,7 @@ namespace Com.H.Collections.Concurrent
                 this._lock.ExitWriteLock();
             }
         }
-         
+
     }
 
 }

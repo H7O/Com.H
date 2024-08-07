@@ -12,6 +12,27 @@ namespace Com.H.Net
 {
     public static class NetExtensions
     {
+        /// <summary>
+        /// Disables the use of default credentials for all HttpClient instances.
+        /// </summary>
+        public static bool DontUseDefaultCredentials { get; set; } = false;
+
+        /// <summary>
+        /// Creates a new HttpClient instance with default credentials if `DontUseDefaultCredentials` is false.
+        /// Otherwise, it creates a new HttpClient instance without default credentials.
+        /// </summary>
+        /// <returns></returns>
+        public static HttpClient NewHttpClient()
+        {
+            if (DontUseDefaultCredentials) return new HttpClient();
+            HttpClientHandler handler = new HttpClientHandler()
+            {
+                UseDefaultCredentials = true,
+                AllowAutoRedirect = true,
+                UseCookies = true
+            };
+            return new HttpClient(handler);
+        }
         public static async Task<byte[]> GetByteArrayAsync(
             this Uri uri,
             string referer = null,
@@ -21,7 +42,7 @@ namespace Com.H.Net
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
-            HttpClient client = new HttpClient();
+            HttpClient client = NewHttpClient();
             if (!string.IsNullOrWhiteSpace(referer))
                 client.DefaultRequestHeaders.Add("Referer", referer);
 
@@ -46,7 +67,7 @@ namespace Com.H.Net
         {
             if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (!uri.IsWellFormedOriginalString()) throw new FormatException($"Invalid {nameof(uri)} format");
-            HttpClient client = new HttpClient();
+            HttpClient client = NewHttpClient();
             if (!string.IsNullOrWhiteSpace(referer))
                 client.DefaultRequestHeaders.Add("Referer", referer);
 

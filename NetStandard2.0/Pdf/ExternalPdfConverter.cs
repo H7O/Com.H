@@ -174,6 +174,7 @@ namespace Com.H.Pdf
                                             // + "--enable-webgl-developer-extensions "
                                             // + "--enable-webgl-draft-extensions "
                                             + "--print-to-pdf-no-header --run-all-compositor-stages-before-draw "
+                                            + "--no-pdf-header-footer "
                                             + "--print-to-pdf=\"{{output}}\" \"{{input}}\"";
 
             #endregion

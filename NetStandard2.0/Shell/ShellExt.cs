@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Com.H.Shell
 {
@@ -24,7 +25,7 @@ namespace Com.H.Shell
 			if (string.IsNullOrWhiteSpace(workingDirectory))
 				workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-			var pInfo = new ProcessStartInfo(command, args)
+			var startInfo = new ProcessStartInfo(command, args)
 			{
 				UseShellExecute = false,
 				RedirectStandardOutput = true,
@@ -34,9 +35,14 @@ namespace Com.H.Shell
 				WindowStyle = ProcessWindowStyle.Hidden
 			};
 
-			var process = new Process
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                startInfo.LoadUserProfile = true; // Only set this on Windows
+            }
+
+            var process = new Process
 			{
-				StartInfo = pInfo,
+				StartInfo = startInfo,
 				EnableRaisingEvents = true
 			};
 			process.Start();

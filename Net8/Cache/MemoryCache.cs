@@ -14,7 +14,14 @@ namespace Com.H.Cache
     /// </summary>
     public class MemoryCache : IDisposable
     {
+        /// <summary>
+        /// If true, the cache will store null values.
+        /// </summary>
         public bool CacheNullValues { get; set; } = false;
+        /// <summary>
+        /// If true, the cache will store factories that cause exceptions when generating values.
+        /// </summary>
+        public bool CacheValueFactoriesThatCauseExceptions { get; set; } = false;
         private CancellationTokenSource? Cts { get; set; }
         private AtomicGate CleanupSwitch { get; set; } = new();
         internal class CacheItem
@@ -34,25 +41,42 @@ namespace Com.H.Cache
         /// <returns>The cached item.</returns>
         public T? Get<T>(object key, Func<T> getValue, TimeSpan? timeSpan = null)
         {
-            var value = (T?)this.cacheItems.AddOrUpdate(key,
-                _ => new Lazy<CacheItem>(() => new CacheItem()
+            lock (key)
+            {
+                T? value;
+                try
                 {
-                    ExpiryDate = timeSpan == null ? DateTime.Today.AddDays(1)
-                    : DateTime.Now.Add((TimeSpan)timeSpan),
-                    Value = getValue == null ? default : getValue()
-                }),
-                (_, oldLazyValue) =>
+                    value = (T?)this.cacheItems.AddOrUpdate(key,
+                    _ => new Lazy<CacheItem>(() => new CacheItem()
+                    {
+                        ExpiryDate = timeSpan == null ? DateTime.Today.AddDays(1)
+                        : DateTime.Now.Add((TimeSpan)timeSpan),
+                        Value = getValue == null ? default : getValue()
+                    }),
+                    (_, oldLazyValue) =>
+                    {
+                        var oldValue = oldLazyValue.Value;
+                        if (!oldValue.Expired) return oldLazyValue;
+                        oldValue.Value = getValue == null ? default : getValue();
+                        oldValue.ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
+                         : DateTime.Now.Add((TimeSpan)timeSpan));
+                        return oldLazyValue;
+                    }).Value.Value;
+                }
+                catch
                 {
-                    var oldValue = oldLazyValue.Value;
-                    if (!oldValue.Expired) return oldLazyValue;
-                    oldValue.Value = getValue == null ? default : getValue();
-                    oldValue.ExpiryDate = (timeSpan == null ? DateTime.Today.AddDays(1)
-                     : DateTime.Now.Add((TimeSpan)timeSpan));
-                    return oldLazyValue;
-                }).Value.Value;
-            if (value == null && !this.CacheNullValues)
-                this.cacheItems.TryRemove(key, out _);
-            return value;
+                    if (this.CacheValueFactoriesThatCauseExceptions)
+                        throw;
+
+                    this.cacheItems.TryRemove(key, out _);
+                    throw;
+                }
+
+                if (value == null && !this.CacheNullValues)
+                    this.cacheItems.TryRemove(key, out _);
+
+                return value;
+            }
         }
         /// <summary>
         /// Clears expired items from the cache.

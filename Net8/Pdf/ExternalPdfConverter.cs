@@ -110,58 +110,68 @@ namespace Com.H.Pdf
 
             #region check platform specific default PDF conversion tool if one isn't specified
 
-            if (InteropExt.CurrentOSPlatform == OSPlatform.Windows)
-            {
-                // check if edge browser is installed
-                if (File.Exists("C:/Program Files/Microsoft/Edge/Application/msedge.exe"))
-                    PdfConverterPath = "C:/Program Files/Microsoft/Edge/Application/msedge.exe";
-                else if (File.Exists("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"))
-                    PdfConverterPath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-                else
-                // check if chrome browser is installed
-                if (File.Exists("C:/Program Files/Google/Chrome/Application/chrome.exe"))
-                    PdfConverterPath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-                else if (File.Exists("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
-                    PdfConverterPath = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
-                else
-                // throw exception for missing PDF converter app informing the user they can set it manually
-                // as the default PDF converter app like chrome or edge are not installed
-                    throw new MissingFieldException($"Cannot find chrome.exe or msedge.exe in: {Environment.NewLine}"
-                    + $" 'C:/Program Files/Google/Chrome/Application/',{Environment.NewLine}"
-                    + $" 'C:/Program Files (x86)/Google/Chrome/Application/',{Environment.NewLine}"
-                    + $" 'C:/Program Files/Microsoft/Edge/Application/' or {Environment.NewLine}"
-                    + " 'C:/Program Files (x86)/Microsoft/Edge/Application/'"
-                    + $" Please set '{nameof(PdfConverterPath)}' to chrome.exe or msedge.exe path "
-                    +"or to any other PDF CLI converter app.");
-            }
-            if (InteropExt.CurrentOSPlatform == OSPlatform.Linux)
-            {
-                if (File.Exists("/usr/bin/google-chrome"))
-                    PdfConverterPath = "/usr/bin/google-chrome";
-                else if (File.Exists("/opt/google/chrome/chrome"))
-                    PdfConverterPath = "/opt/google/chrome/chrome";
-                else
-                    throw new MissingFieldException($"Cannot find chrome in either"
-                    + " '/usr/bin/google-chrome' or"
-                    + " '/opt/google/chrome/chrome'"
-                    + $" Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+            if (!string.IsNullOrWhiteSpace(PdfConverterPath)
+                &&
+                !File.Exists(PdfConverterPath)
+                )
+                throw new FileNotFoundException($"PDF converter path '{PdfConverterPath}' not found");
 
-            }
-            if (InteropExt.CurrentOSPlatform == OSPlatform.OSX)
+            if (string.IsNullOrWhiteSpace(PdfConverterPath))
             {
-                if (File.Exists("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
-                    PdfConverterPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-                else
-                    throw new MissingFieldException("Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. "
-                                                + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
-            }
-            if (InteropExt.CurrentOSPlatform == OSPlatform.FreeBSD)
-            {
-                if (File.Exists("/usr/local/bin/chrome"))
-                    PdfConverterPath = "/usr/local/bin/chrome";
-                else
-                    throw new MissingFieldException("Cannot find chrome in '/usr/local/bin/chrome'. "
-                        + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+
+                if (InteropExt.CurrentOSPlatform == OSPlatform.Windows)
+                {
+                    // check if edge browser is installed
+                    if (File.Exists("C:/Program Files/Microsoft/Edge/Application/msedge.exe"))
+                        PdfConverterPath = "C:/Program Files/Microsoft/Edge/Application/msedge.exe";
+                    else if (File.Exists("C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"))
+                        PdfConverterPath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+                    else
+                    // check if chrome browser is installed
+                    if (File.Exists("C:/Program Files/Google/Chrome/Application/chrome.exe"))
+                        PdfConverterPath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+                    else if (File.Exists("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
+                        PdfConverterPath = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
+                    else
+                        // throw exception for missing PDF converter app informing the user they can set it manually
+                        // as the default PDF converter app like chrome or edge are not installed
+                        throw new MissingFieldException($"Cannot find chrome.exe or msedge.exe in: {Environment.NewLine}"
+                        + $" 'C:/Program Files/Google/Chrome/Application/',{Environment.NewLine}"
+                        + $" 'C:/Program Files (x86)/Google/Chrome/Application/',{Environment.NewLine}"
+                        + $" 'C:/Program Files/Microsoft/Edge/Application/' or {Environment.NewLine}"
+                        + " 'C:/Program Files (x86)/Microsoft/Edge/Application/'"
+                        + $" Please set '{nameof(PdfConverterPath)}' to chrome.exe or msedge.exe path "
+                        + "or to any other PDF CLI converter app.");
+                }
+                if (InteropExt.CurrentOSPlatform == OSPlatform.Linux)
+                {
+                    if (File.Exists("/usr/bin/google-chrome"))
+                        PdfConverterPath = "/usr/bin/google-chrome";
+                    else if (File.Exists("/opt/google/chrome/chrome"))
+                        PdfConverterPath = "/opt/google/chrome/chrome";
+                    else
+                        throw new MissingFieldException($"Cannot find chrome in either"
+                        + " '/usr/bin/google-chrome' or"
+                        + " '/opt/google/chrome/chrome'"
+                        + $" Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+
+                }
+                if (InteropExt.CurrentOSPlatform == OSPlatform.OSX)
+                {
+                    if (File.Exists("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
+                        PdfConverterPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+                    else
+                        throw new MissingFieldException("Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. "
+                                                    + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+                }
+                if (InteropExt.CurrentOSPlatform == OSPlatform.FreeBSD)
+                {
+                    if (File.Exists("/usr/local/bin/chrome"))
+                        PdfConverterPath = "/usr/local/bin/chrome";
+                    else
+                        throw new MissingFieldException("Cannot find chrome in '/usr/local/bin/chrome'. "
+                            + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
+                }
             }
             
             if (string.IsNullOrWhiteSpace(PdfConverterPath)
@@ -182,6 +192,7 @@ namespace Com.H.Pdf
                                             // + "--enable-webgl-draft-extensions "
                                             + "--print-to-pdf-no-header --run-all-compositor-stages-before-draw "
                                             + "--no-pdf-header-footer "
+                                            + "--virtual-time-budget=5000 "
                                             + "--print-to-pdf=\"{{output}}\" \"{{input}}\"";
 
             #endregion

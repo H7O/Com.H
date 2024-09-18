@@ -36,10 +36,12 @@ namespace Com.H.Pdf
             )
             => ExtPdfConv.UriToPdfFile(uri, pdfFilePath, deleteInputFileAfterConversionProcess);
         public static FileStream ToPdfStream(
-            this Uri uri, 
+            this Uri uri,
             string pdfTempFilePath = null
             )
-            => ExtPdfConv.UriToPdfStream(uri, pdfTempFilePath, true);
+        {
+            return ExtPdfConv.UriToPdfStream(uri, pdfTempFilePath, true);
+        }
 
 
         public static FileStream ToRenderedPdfStream(

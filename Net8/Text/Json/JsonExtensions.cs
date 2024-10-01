@@ -52,5 +52,114 @@ namespace Com.H.Text.Json
                     JsonValueKind.Null => null!,
                     _ => throw new ArgumentOutOfRangeException()
                 };
+
+        /// <summary>
+        /// Serializes an object to JSON text asynchronously and in a streaming (deferred) manner
+        /// </summary>
+        /// <param name="data">The object to serialize</param>
+        /// <param name="outputStream">The output stream to write the JSON text to</param>
+        /// <param name="options">The optional JSON serializer options</param>
+        /// <param name="cancellationToken">The optional cancellation token</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        /// <exception cref="ArgumentNullException">Thrown when the outputStream is null</exception>
+        public static async Task JsonSerializeAsync(
+            this object data,
+            Stream outputStream,
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (outputStream == null)
+            {
+                throw new ArgumentNullException(nameof(outputStream));
+            }
+            using (var writer = new Utf8JsonWriter(outputStream))
+            {
+                await writer.SerializeAsync(data);
+            }
+        }
+
+
+        private static async Task SerializeAsync(
+            this Utf8JsonWriter writer,
+            object? value,
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default
+            )
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            if (value is IAsyncEnumerable<object> asyncEnumerable)
+            {
+                writer.WriteStartArray();
+                await foreach (var item in asyncEnumerable)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    await SerializeAsync(writer, item, options, cancellationToken);
+                }
+                writer.WriteEndArray();
+            }
+            else if (value is IEnumerable<object> enumerable)
+            {
+                writer.WriteStartArray();
+                foreach (var item in enumerable)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    await SerializeAsync(writer, item, options, cancellationToken);
+                }
+                writer.WriteEndArray();
+            }
+            else if (value != null && !value.IsJsonPrimitive())
+            {
+                writer.WriteStartObject();
+                foreach (var property in value.GetType().GetProperties())
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    writer.WritePropertyName(property.Name);
+                    var propertyValue = property.GetValue(value);
+                    await SerializeAsync(writer, propertyValue, options, cancellationToken);
+                }
+                writer.WriteEndObject();
+            }
+            else
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                JsonSerializer.Serialize(writer, value, options);
+            }
+        }
+
+        public static bool IsJsonPrimitive(this object value)
+        {
+            return value is string || value.GetType().IsPrimitive || value is decimal || value is DateTime || value is Guid;
+        }
+
+
+        //public static async Task DeferredWriteAsJsonAsync(this HttpResponse response, ObjectResult result)
+        //{
+        //    response.StatusCode = result.StatusCode ?? 200;
+        //    response.ContentType = "application/json";
+
+        //    await using (var writer = new Utf8JsonWriter(response.BodyWriter))
+        //    {
+        //        await JsonSerializeAsync(writer, result.Value);
+        //    }
+        //}
     }
 }

@@ -17,7 +17,7 @@ namespace Com.H.Xml.Linq
         /// <param name="keepRoot">Determines whether or not to ignore the root element of the XML when constructing the data model. Default is false (i.e. root element is ignored)</param>
         /// <returns></returns>
         public static dynamic? ParseXml(this string xml, bool keepRoot = false)
-            => AsDynamic(XElement.Parse(xml), keepRoot);
+            => XElement.Parse(xml).AsDynamic(keepRoot);
 
 
         public static dynamic? AsDynamic(this XElement xElement, bool keepRoot = false)
@@ -27,7 +27,7 @@ namespace Com.H.Xml.Linq
                 return Enumerable.Empty<object>();
 
             if (keepRoot == false)
-                return xElement.Elements().Select(x => AsDynamic(x, true)).ToList();
+                return xElement.Elements().Select(x => x.AsDynamic(true)).ToList();
 
             ExpandoObject obj = new();
 
@@ -63,7 +63,7 @@ namespace Com.H.Xml.Linq
 
             foreach (var e in xElement.Elements().Where(x => x.HasAttributes || x.HasElements))
                 obj.TryAdd((properties.ContainsKey(e.Name.LocalName) ? "_" : "")
-                    + e.Name.LocalName, (object?)AsDynamic(e, true));
+                    + e.Name.LocalName, (object?)e.AsDynamic(true));
 
             return obj;
         }

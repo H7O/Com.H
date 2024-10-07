@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
@@ -61,7 +62,7 @@ namespace Com.H.Text.Json
         /// <param name="options">The optional JSON serializer options</param>
         /// <param name="cancellationToken">The optional cancellation token</param>
         /// <returns>A task representing the asynchronous operation</returns>
-        /// <exception cref="ArgumentNullException">Thrown when the outputStream is null</exception>
+        /// <exception cref="ArgumentNullException">Thrown when the writer is null</exception>
         public static async Task JsonSerializeAsync(
             this object data,
             Stream outputStream,
@@ -78,8 +79,36 @@ namespace Com.H.Text.Json
             }
         }
 
+        public static async Task JsonSerializeAsync(
+            this object data,
+            IBufferWriter<byte> bufferedWriter,
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (bufferedWriter == null)
+            {
+                throw new ArgumentNullException(nameof(bufferedWriter));
+            }
+            using (var writer = new Utf8JsonWriter(bufferedWriter))
+            {
+                await writer.SerializeAsync(data);
+            }
+        }
 
-        private static async Task SerializeAsync(
+        public static async Task JsonSerializeAsync(
+            this object data,
+            Utf8JsonWriter writer,
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            if (writer == null)
+            {
+                throw new ArgumentNullException(nameof(writer));
+            }
+            await writer.SerializeAsync(data);
+        }
+
+        public static async Task SerializeAsync(
             this Utf8JsonWriter writer,
             object? value,
             JsonSerializerOptions? options = null,
@@ -151,15 +180,28 @@ namespace Com.H.Text.Json
         }
 
 
-        //public static async Task DeferredWriteAsJsonAsync(this HttpResponse response, ObjectResult result)
+        // use the below sample in either your controller or middleware
+
+        //public static async Task DeferredWriteAsJsonAsync(
+        //    this HttpResponse response, 
+        //    ObjectResult result,
+        //    CancellationToken cancellationToken = default
+        //    )
         //{
+
+        //    // if value is null, return 204
+        //    if (result.Value == null)
+        //    {
+        //        response.StatusCode = result.StatusCode ?? 204;
+        //        return;
+        //    }
+
         //    response.StatusCode = result.StatusCode ?? 200;
         //    response.ContentType = "application/json";
 
-        //    await using (var writer = new Utf8JsonWriter(response.BodyWriter))
-        //    {
-        //        await JsonSerializeAsync(writer, result.Value);
-        //    }
+        //    await result.Value.JsonSerializeAsync(response.BodyWriter, cancellationToken:cancellationToken);
+
         //}
+
     }
 }

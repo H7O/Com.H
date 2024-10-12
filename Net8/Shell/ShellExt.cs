@@ -17,9 +17,11 @@ public static class ShellExt
         this string command,
         string args,
         string? workingDirectory = null,
-        int timeout = 60000
+        int timeout = 60000,
+        System.Collections.Specialized.StringDictionary? environmentVariables = null
         )
     {
+       
         if (string.IsNullOrWhiteSpace(workingDirectory))
             workingDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -32,6 +34,16 @@ public static class ShellExt
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
         };
+        if (environmentVariables != null)
+        {
+            foreach (var key in environmentVariables.Keys)
+            {
+                var keyStr = key as string;
+                if (string.IsNullOrWhiteSpace(keyStr))
+                    continue;
+                startInfo.EnvironmentVariables[keyStr] = environmentVariables[keyStr];
+            }
+        }
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {

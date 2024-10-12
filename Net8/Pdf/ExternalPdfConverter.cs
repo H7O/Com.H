@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Com.H.IO;
 using Com.H.Net;
@@ -43,6 +44,7 @@ namespace Com.H.Pdf
 		/// </summary>
 		public string? PdfConverterParameters { get; set; }
 
+        public System.Collections.Specialized.StringDictionary? EnvironmentVariables { get; set; }
         private static string GetSuitableTempPath()
         {
                 // check if we can write to temp folder
@@ -210,7 +212,7 @@ namespace Com.H.Pdf
                     Directory.CreateDirectory(parentDirectory);
 
 
-                Convert(this.PdfConverterPath, args);
+                Convert(this.PdfConverterPath, args, EnvironmentVariables);
                 
             }
             catch (Exception ex)
@@ -320,141 +322,16 @@ namespace Com.H.Pdf
         }
 
 
-
-        // root implementation to be deleted
-        // public void HtmlToPdfFileDepricated(
-		// 	string htmlContent,
-		// 	string outputFilePath,
-		// 	string? htmlContentTempFilePath = null
-		// 	)
-		// {
-		// 	if (string.IsNullOrWhiteSpace(htmlContent)) throw new ArgumentNullException(nameof(htmlContent));
-		// 	if (string.IsNullOrWhiteSpace(outputFilePath)) throw new ArgumentNullException(nameof(outputFilePath));
-		// 	if (string.IsNullOrWhiteSpace(PdfConverterPath))
-		// 	{
-		// 		if (InteropExt.CurrentOSPlatform == OSPlatform.Windows)
-		// 		{
-		// 			if (File.Exists("C:/Program Files/Google/Chrome/Application/chrome.exe"))
-		// 				PdfConverterPath = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-		// 			else if (File.Exists("C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"))
-		// 				PdfConverterPath = "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
-		// 			else
-		// 				throw new MissingFieldException("Cannot find chrome.exe in either"
-		// 				+ " 'C:/Program Files/Google/Chrome/Application/' or"
-		// 				+ " 'C:/Program Files (x86)/Google/Chrome/Application/'"
-		// 				+ $" Please set {nameof(PdfConverterPath)} to chrome.exe path, or to any other PDF CLI converter app.");
-		// 		}
-		// 		if (InteropExt.CurrentOSPlatform == OSPlatform.Linux)
-		// 		{
-        //             if (File.Exists("/usr/bin/google-chrome"))
-        //                 PdfConverterPath = "/usr/bin/google-chrome";
-        //             else if (File.Exists("/opt/google/chrome/chrome"))
-        //                 PdfConverterPath = "/opt/google/chrome/chrome";
-        //             else
-        //                 throw new MissingFieldException($"Cannot find chrome in either"
-        //                 + " '/usr/bin/google-chrome' or"
-        //                 + " '/opt/google/chrome/chrome'"
-        //                 + $" Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
-
-		// 		}
-		// 		if (InteropExt.CurrentOSPlatform == OSPlatform.OSX)
-		// 		{
-		// 			if (File.Exists("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
-		// 				PdfConverterPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-		// 			else
-		// 				throw new MissingFieldException("Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. "
-        //                                             + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
-		// 		}
-		// 		if (InteropExt.CurrentOSPlatform == OSPlatform.FreeBSD)
-		// 		{
-		// 			if (File.Exists("/usr/local/bin/chrome"))
-		// 				PdfConverterPath = "/usr/local/bin/chrome";
-		// 			else
-		// 				throw new MissingFieldException("Cannot find chrome in '/usr/local/bin/chrome'. "
-        //                     + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
-		// 		}
-		// 		if (string.IsNullOrWhiteSpace(this.PdfConverterParameters))
-		// 			this.PdfConverterParameters = "--headless "
-        //                                         + "--disable-gpu "
-        //                                         + "--log-level=3 "
-        //                                         // + "--disable-logging "
-        //                                         // + "--silent "
-        //                                         // + "--disable-software-rasterizer "
-        //                                         // + "--no-sandbox "
-        //                                         // + "--ignore-gpu-blocklist "
-        //                                         // + "--enable-webgl-developer-extensions "
-        //                                         // + "--enable-webgl-draft-extensions "
-        //                                         + "--print-to-pdf-no-header --run-all-compositor-stages-before-draw "
-        //                                         + "--print-to-pdf=\"{{output}}\" \"{{input}}\"";
-
-		// 	}
-
-        //     // check if PdfConverterPath is not null or white space
-        //     if (string.IsNullOrWhiteSpace(PdfConverterPath))
-        //         throw new MissingFieldException($"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
-                
-
-		// 	if (string.IsNullOrWhiteSpace(htmlContentTempFilePath)) htmlContentTempFilePath = $"{IOExtensions.GetTempFilePath()}.html";
-		// 	File.WriteAllText(htmlContentTempFilePath, htmlContent);
-
-		// 	var args = PdfConverterParameters?
-		// 		.Replace("{{input}}", htmlContentTempFilePath)
-		// 		.Replace("{{output}}", outputFilePath);
-
-		// 	try
-		// 	{
-		// 		var parentDirectory = Path.GetDirectoryName(outputFilePath);
-		// 		if (!string.IsNullOrWhiteSpace(parentDirectory)
-		// 			&& !Directory.Exists(parentDirectory))
-		// 			Directory.CreateDirectory(parentDirectory);
-		// 		Convert(this.PdfConverterPath, args);
-		// 	}
-		// 	catch(Exception ex)
-		// 	{
-        //         // supresses chrome unsuppressable info messages that get printed to stderr
-        //         // and only raises an exception for actual error messages
-        //         if (this.PdfConverterPath?.ContainsIgnoreCase("chrome") == true
-        //             &&
-        //             ex.Message.Contains(":ERROR:"))
-		// 		    throw;
-		// 	}
-		// 	finally
-		// 	{
-
-		// 		try
-		// 		{
-		// 			File.Delete(htmlContentTempFilePath);
-		// 		}
-		// 		catch { }
-		// 	}
-
-
-		// }
-
-		// private static void ConvertWin(string? converterPath, string? converterArgs)
-		// {
-		//     if (string.IsNullOrWhiteSpace(converterPath)) throw new ArgumentNullException(nameof(converterPath));
-		//     converterPath = converterPath.UnifyPathSeperator();
-		//     if (!File.Exists(converterPath)) 
-		//         throw new FileNotFoundException($"Can't find PDF converter at path '{converterPath}'");
-		//     var pInfo = new ProcessStartInfo(converterPath, converterArgs??"")
-		//     {
-		//         UseShellExecute = false,
-		//         WorkingDirectory = Path.GetDirectoryName(converterPath)
-		//     };
-		//     int oldMode = SetErrorMode(3);
-		//     var p = Process.Start(pInfo);
-		//     _ = SetErrorMode(oldMode);
-		//     p?.WaitForExit(60000);
-		// }
-
-		private static void Convert(string converterPath, string? converterArgs)
+		private static void Convert(
+            string converterPath, 
+            string? converterArgs, 
+            System.Collections.Specialized.StringDictionary? environmentVars = null)
 		{
 			if (string.IsNullOrWhiteSpace(converterPath)) throw new ArgumentNullException(nameof(converterPath));
 			converterPath = converterPath.UnifyPathSeperator();
 			if (!File.Exists(converterPath))
 				throw new FileNotFoundException($"Can't find PDF converter at path '{converterPath}'");
-			_ = converterPath.RunCommand(converterArgs ?? "", Path.GetDirectoryName(converterPath));
+			_ = converterPath.RunCommand(converterArgs ?? "", Path.GetDirectoryName(converterPath), environmentVariables:environmentVars);
 		}
 
 

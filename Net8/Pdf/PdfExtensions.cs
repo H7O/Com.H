@@ -8,14 +8,55 @@ namespace Com.H.Pdf
     public static class PdfExtensions
     {
         private static ExternalPdfConverter? _externalPdfConverter = null;
-        public static string? DefaultPdfConverterPath { get; set; }
-        public static string? DefaultPdfConverterParameters { get; set; }
+        private static string? _defaultPdfConverterPath = null;
+        public static string? DefaultPdfConverterPath 
+        { 
+            get
+            {
+                return _defaultPdfConverterPath;//  ??=
+                    // new Uri(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wkhtmltopdf.exe")).LocalPath;
+            }
+            set
+            {
+                _defaultPdfConverterPath = value;
+                _externalPdfConverter = null;
+            }
+        }
+
+        private static string? _defaultPdfConverterParameters = null;
+        public static string? DefaultPdfConverterParameters
+        {
+            get
+            {
+                return _defaultPdfConverterParameters;
+            }
+            set
+            {
+                _defaultPdfConverterParameters = value;
+                _externalPdfConverter = null;
+            }
+        }
+
+        private static System.Collections.Specialized.StringDictionary? _defaultEnvironmentVariables = null;
+        public static System.Collections.Specialized.StringDictionary? DefaultEnvironmentVariables 
+        {
+            get
+            {
+                return _defaultEnvironmentVariables ??= new System.Collections.Specialized.StringDictionary();
+            }
+            set
+            {
+                _defaultEnvironmentVariables = value;
+                _externalPdfConverter = null;
+            }
+        }
         private static ExternalPdfConverter ExtPdfConv => 
             _externalPdfConverter ??= 
                 new ExternalPdfConverter() 
                 { 
                     PdfConverterParameters = DefaultPdfConverterParameters, 
-                    PdfConverterPath = DefaultPdfConverterPath 
+                    PdfConverterPath = DefaultPdfConverterPath,
+                    EnvironmentVariables = DefaultEnvironmentVariables
                 };
 
         public static void ToPdfFile(

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -175,15 +176,6 @@ namespace Com.H.IO
             return path;
         }
 
-        //public static string GetCurrentDirectory()
-        //{
-        //    #if ASPNETCORE50
-        //    // return AppDomain.CurrentDomain.BaseDirectory
-        //        return Directory.GetCurrentDirectory();
-        //    #else
-        //        return  Environment.CurrentDirectory;
-        //    #endif
-        //}
 
         public static MemoryStream ToMemoryStream(this string content, Encoding? encoding = null)
             => new((encoding ?? Encoding.UTF8).GetBytes(content));

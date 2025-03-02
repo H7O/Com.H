@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Com.H.Collections.Concurrent
 {
-    internal class InvalidLazyConcurrentUpdateException : Exception
-    {
+    //internal class InvalidLazyConcurrentUpdateException : Exception
+    //{
 
-    }
+    //}
 }

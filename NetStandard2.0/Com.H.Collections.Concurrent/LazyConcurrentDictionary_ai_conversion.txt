@@ -15,7 +15,7 @@ namespace Com.H.Collections.Concurrent
     public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue> where TKey : class
     {
         private readonly ConcurrentDictionary<TKey, Lazy<TValue>> _dic = new ConcurrentDictionary<TKey, Lazy<TValue>>();
-
+        
         public LazyConcurrentDictionary()
         { }
 
@@ -38,7 +38,7 @@ namespace Com.H.Collections.Concurrent
                 if (key == null
                     || !this._dic.ContainsKey(key)
                     ) return default(TValue);
-
+                
                 Lazy<TValue> lv;
                 this._dic.TryGetValue(key, out lv);
                 return lv == null ? default(TValue) : lv.Value;
@@ -67,7 +67,7 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             return this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => value),
@@ -81,7 +81,7 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             return this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => addValueFactory(key)),
@@ -120,14 +120,14 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             return this._dic.AddOrUpdate(
                 key,
                 new Lazy<TValue>(() => addValueFactory(key, factoryArgument)),
                 (k, oldItem) => new Lazy<TValue>(() => updateValueFactory(k, oldItem.Value, factoryArgument)))
                 .Value;
         }
-
+        
         /// <summary>
         /// Thread-safe updates the dictionary. If a key doesn't exist, no update is done and the method returns default TValue.
         /// </summary>
@@ -139,10 +139,10 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             try
             {
-                var value = this.AddOrUpdate(key,
+                var value = this.AddOrUpdate(key, 
                     _ => throw new InvalidLazyConcurrentUpdateException(),
                     (k, oldValue) => updateValueFactory(k, oldValue));
                 return value;
@@ -164,12 +164,12 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             try
             {
                 var value = this.AddOrUpdate(key,
                     k => addValueFactory(k),
-                    (_, x) => throw new InvalidLazyConcurrentUpdateException());
+                    (_, _) => throw new InvalidLazyConcurrentUpdateException());
                 return value;
             }
             catch (InvalidLazyConcurrentUpdateException)
@@ -182,7 +182,7 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             return this._dic.ContainsKey(key);
         }
 
@@ -198,7 +198,7 @@ namespace Com.H.Collections.Concurrent
                 value = default(TValue);
                 return false;
             }
-
+            
             Lazy<TValue> outValue;
             if (this._dic.TryGetValue(key, out outValue))
             {
@@ -216,7 +216,7 @@ namespace Com.H.Collections.Concurrent
                 value = default(TValue);
                 return false;
             }
-
+            
             Lazy<TValue> outValue;
             if (this._dic.TryRemove(key, out outValue))
             {
@@ -231,7 +231,7 @@ namespace Com.H.Collections.Concurrent
         {
             if (key == null)
                 throw new ArgumentNullException(nameof(key));
-
+                
             return this._dic.TryAdd(key, new Lazy<TValue>(() => value));
         }
 

@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Com.H.Collections.Concurrent
 {
+    internal class InvalidLazyConcurrentUpdateException : Exception
+    {
+    }
     public class LazyConcurrentDictionary<TKey, TValue> : IReadOnlyDictionary<TKey, TValue?> where TKey : notnull
     {
         private readonly ConcurrentDictionary<TKey, Lazy<TValue?>> _dic = new();

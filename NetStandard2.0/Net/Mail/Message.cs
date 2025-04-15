@@ -22,6 +22,8 @@ namespace Com.H.Net.Mail
         public bool Ssl { get; set; } = false;
         public string Subject { get; set; }
         public string From { get; set; }
+        public string FromDisplayName { get; set; }
+        public Encoding FromDisplayNameEncoding { get; set; }
         public string Body { get; set; }
 
         #region to
@@ -165,6 +167,16 @@ namespace Com.H.Net.Mail
             }
             if (this.DeliveryMethod != null) 
                 client.DeliveryMethod = (System.Net.Mail.SmtpDeliveryMethod)DeliveryMethod;
+
+            if (this.FromDisplayName != null)
+            {
+                this.Msg.From = this.FromDisplayNameEncoding is null ?
+                    new System.Net.Mail.MailAddress(this.From, this.FromDisplayName)
+                    : new System.Net.Mail.MailAddress(this.From, this.FromDisplayName, this.FromDisplayNameEncoding);
+
+            }
+            else this.Msg.From = new System.Net.Mail.MailAddress(this.From);
+
 
             this.Msg.From = new System.Net.Mail.MailAddress(this.From);
             this.To?.ForEach(x => this.Msg.To.Add(x));

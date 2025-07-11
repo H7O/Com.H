@@ -7,7 +7,7 @@
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
     <ApplicationIcon>128x128.ico</ApplicationIcon>
-    <Version>9.0.0.0</Version>
+    <Version>9.0.0.1</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>

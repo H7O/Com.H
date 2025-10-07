@@ -86,10 +86,17 @@ namespace Com.H.Reflection
             {
                 try
                 {
-                    item.dst.Info.SetValue(destination,
-                        Convert.ChangeType(item.src.Value,
-                        item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
-                    );
+                    if (item.src.Value == null)
+                    {
+                        item.dst.Info.SetValue(destination, null);
+                    }
+                    else
+                    {
+                        Type targetType = Nullable.GetUnderlyingType(item.dst.Info.PropertyType) ?? item.dst.Info.PropertyType;
+                        item.dst.Info.SetValue(destination,
+                            Convert.ChangeType(item.src.Value, targetType, CultureInfo.InvariantCulture)
+                        );
+                    }
                 }
                 catch { }
             }
@@ -117,13 +124,6 @@ namespace Com.H.Reflection
 
             if (source.GetType() == typeof(T))
                 return (T)source;
-
-            // below is not needed, as it's slower and can be handled by the IsSimpleType check
-            //if ((Nullable.GetUnderlyingType(source.GetType())?? source.GetType())
-            //        == 
-            //        (Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T)))
-            //    return (T)source;
-
 
             // check if it's a primitive type or string, decimal, DateTime, Guid, etc..
             if (IsSimpleType(source.GetType()))
@@ -156,15 +156,15 @@ namespace Com.H.Reflection
                     if (item.src.Info.PropertyType == item.dst.Info.PropertyType)
                         item.dst.Info.SetValue(destination, val);
                     else 
+                    {
+                        Type targetType = Nullable.GetUnderlyingType(item.dst.Info.PropertyType) ?? item.dst.Info.PropertyType;
                         item.dst.Info.SetValue(destination,
-                            Convert.ChangeType(val,
-                            item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
+                            Convert.ChangeType(val, targetType, CultureInfo.InvariantCulture)
                         );
+                    }
 
                 }
-                catch 
-                {
-                }
+                catch {}
             }
             return destination;
         }
@@ -204,12 +204,25 @@ namespace Com.H.Reflection
             {
                 try
                 {
-                    item.dst.Info.SetValue(destination,
-                        item.src.Info == null ? null
-                        :
-                        Convert.ChangeType(item.src.Info.GetValue(source),
-                        item.dst.Info.PropertyType, CultureInfo.InvariantCulture)
-                    );
+                    if (item.src.Info == null)
+                    {
+                        item.dst.Info.SetValue(destination, null);
+                    }
+                    else
+                    {
+                        var sourceValue = item.src.Info.GetValue(source);
+                        if (sourceValue == null)
+                        {
+                            item.dst.Info.SetValue(destination, null);
+                        }
+                        else
+                        {
+                            Type targetType = Nullable.GetUnderlyingType(item.dst.Info.PropertyType) ?? item.dst.Info.PropertyType;
+                            item.dst.Info.SetValue(destination,
+                                Convert.ChangeType(sourceValue, targetType, CultureInfo.InvariantCulture)
+                            );
+                        }
+                    }
                 }
                 catch { }
             }

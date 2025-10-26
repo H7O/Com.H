@@ -5,6 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -234,5 +236,186 @@ namespace Com.H.IO
             return fileInfo == null ? throw new ArgumentNullException(nameof(fileInfo)) 
                 : IsFileInUse(fileInfo.FullName);
         }
+
+
+        #region file upload security checks
+        private static readonly HashSet<string> WindowsReservedNames = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "CON", "PRN", "AUX", "NUL",
+            "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        };
+
+        // Check for zero-width and other invisible Unicode characters
+        // These can be used to bypass validation or hide malicious content
+        private static readonly HashSet<char> InvisibleChars = [
+        '\u200B', // Zero-width space
+        '\u200C', // Zero-width non-joiner
+        '\u200D', // Zero-width joiner  
+        '\u200E', // Left-to-right mark
+        '\u200F', // Right-to-left mark
+        '\uFEFF'  // Zero-width no-break space (BOM)
+        ];
+
+
+        /// <summary>
+        /// Validates a user-provided file name for security and compatibility issues.
+        /// Prevents path traversal, invalid characters, reserved names, and ensures
+        /// the file name is within safe length and character limits. Returns a
+        /// normalized version of the file name.
+        /// </summary>
+        /// <param name="fileName">The user-provided file name to validate (not a path).</param>
+        /// <param name="permittedFileExtensions">Extension whitelist (including the dot, e.g., ".txt"). If null or empty, all extensions are allowed.</param>
+        /// <exception cref="ArgumentException">Thrown when the file name is invalid.</exception>
+        /// <exception cref="SecurityException">Thrown when the file name could escape the base directory.</exception>
+        /// <returns>Normalized file name</returns>
+        /// <remarks>
+        /// IMPORTANT: Extension whitelist configuration must include the dot prefix (e.g., ".txt", ".pdf")
+        /// because Path.GetExtension() returns extensions in the format ".ext".
+        /// </remarks>
+
+        public static string ValidateAndGetNormalizeFileName(
+            this string fileName, 
+            HashSet<string>? permittedFileExtensions = null)
+        {
+            
+
+            if (string.IsNullOrWhiteSpace(fileName))
+            {
+                throw new ArgumentException("File name cannot be empty or whitespace.");
+            }
+
+            // Normalize to NFC form to prevent Unicode bypass attacks
+            if (!fileName.IsNormalized(NormalizationForm.FormC))
+            {
+                fileName = fileName.Normalize(NormalizationForm.FormC);
+            }
+
+
+            // Check for zero - width and other invisible Unicode characters
+            // These can be used to bypass validation or hide malicious content
+            if (fileName.Any(c => InvisibleChars.Contains(c)))
+            {
+                throw new ArgumentException($"File name `{fileName}` contains invisible Unicode characters.");
+            }
+
+            // Check for control characters early (includes null bytes)
+            // (0x00-0x1F)
+            if (fileName.Any(c => char.IsControl(c)))
+            {
+                throw new ArgumentException($"File name `{fileName}` contains control characters.");
+            }
+
+
+
+            // Check for NTFS alternate data streams (Windows-specific attack,
+            // but won't show up in Path.GetInvalidFileNameChars(), added for cross platform compatiblity
+            // in case files were first uploaded to linux then accessed on Windows later, or copied to Windows)
+            if (fileName.Contains(':'))
+            {
+                throw new ArgumentException($"File name `{fileName}` contains colon character (potential alternate data stream).");
+            }
+
+            // validate if file name has invalid characters
+            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            {
+                if (fileName.Contains(invalidChar))
+                {
+                    throw new ArgumentException($"File name `{fileName}` contains invalid character `{invalidChar}`");
+                }
+            }
+
+
+            // validate if file name is too long
+            if (fileName.Length > 150)
+            {
+                throw new ArgumentException($"File name `{fileName}` is too long. Maximum length is 150 characters.");
+            }
+
+            // validate if file name has path traversal characters
+            if (fileName.Contains(".."))
+            {
+                throw new ArgumentException($"File name `{fileName}` contains invalid path traversal sequence `..`");
+            }
+
+            // validate if file name has directory separator characters
+            if (fileName.Contains(Path.DirectorySeparatorChar) || fileName.Contains(Path.AltDirectorySeparatorChar))
+            {
+                throw new ArgumentException($"File name `{fileName}` contains invalid directory separator characters.");
+            }
+
+            // Check if the base filename (without extension) is reserved
+            // although this is Windows specific, it's better to avoid using these names
+            // in case the files are ever accessed on a Windows system (such as a Windows-based file share)
+            // or copied to a Windows system
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+            if (WindowsReservedNames.Contains(fileNameWithoutExtension))
+            {
+                throw new ArgumentException($"File name `{fileName}` uses a reserved Windows device name.");
+            }
+
+            // Trim and check for changes (also Windows specific, but good practice to have it on linux too for the same reasons as above)
+            var trimmedFileName = fileName.Trim(' ', '.');
+            if (trimmedFileName != fileName)
+            {
+                throw new ArgumentException($"File name cannot start or end with spaces or dots.");
+            }
+
+            // Check for files that are only dots (Windows restriction)
+            if (fileName.All(c => c == '.'))
+            {
+                throw new ArgumentException($"File name cannot consist only of dots.");
+            }
+
+
+            // Check for leading hyphen (can cause issues with command-line tools)
+            if (fileName.StartsWith("-"))
+            {
+                throw new ArgumentException($"File name cannot start with a hyphen.");
+            }
+
+            // Optional: Check for multiple extensions (uncomment if needed)
+            // if (fileName.Count(c => c == '.') > 1)
+            // {
+            //     throw new ArgumentException($"File name `{fileName}` contains multiple extensions.");
+            // }
+
+
+            // base path hasn't yet been decided (to be decided in the next middleware), but for security validation purposes
+            // we can assume a base path and check if the combined path escapes it
+            var testBasePath = Path.GetTempPath();
+            var testFullPath = Path.GetFullPath(Path.Combine(testBasePath, fileName));
+
+            // Ensure the resolved path is within the base directory
+            var comparison = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+
+            if (!testFullPath.StartsWith(testBasePath, comparison))
+            {
+                throw new SecurityException($"File path escapes the base directory.");
+            }
+
+
+            if (permittedFileExtensions != null && permittedFileExtensions.Count > 0)
+            {
+                var fileExtension = Path.GetExtension(fileName);
+
+                if (string.IsNullOrWhiteSpace(fileExtension))
+                {
+                    throw new ArgumentException("File must have an extension.");
+                }
+
+                if (!permittedFileExtensions.Contains(fileExtension, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException($"File extension `{fileExtension}` is not permitted.");
+                }
+            }
+            return fileName;
+        }
+
+        #endregion
+
     }
 }

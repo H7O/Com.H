@@ -1,5 +1,6 @@
 ﻿using Com.H.Threading;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -238,8 +240,8 @@ namespace Com.H.IO
         }
 
 
-        #region file upload security checks
-        private static readonly HashSet<string> WindowsReservedNames = new(StringComparer.OrdinalIgnoreCase)
+        #region file name checks and validation
+        public static readonly HashSet<string> WindowsReservedNames = new(StringComparer.OrdinalIgnoreCase)
         {
             "CON", "PRN", "AUX", "NUL",
             "COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
@@ -248,7 +250,7 @@ namespace Com.H.IO
 
         // Check for zero-width and other invisible Unicode characters
         // These can be used to bypass validation or hide malicious content
-        private static readonly HashSet<char> InvisibleChars = [
+        public static readonly HashSet<char> InvisibleChars = [
         '\u200B', // Zero-width space
         '\u200C', // Zero-width non-joiner
         '\u200D', // Zero-width joiner  
@@ -256,6 +258,12 @@ namespace Com.H.IO
         '\u200F', // Right-to-left mark
         '\uFEFF'  // Zero-width no-break space (BOM)
         ];
+
+
+        // Precompute invalid file name characters for performance
+        public static readonly SearchValues<char> InvalidFileNameChars =
+        SearchValues.Create(Path.GetInvalidFileNameChars());
+
 
 
         /// <summary>
@@ -275,10 +283,10 @@ namespace Com.H.IO
         /// </remarks>
 
         public static string ValidateAndGetNormalizeFileName(
-            this string fileName, 
+            string fileName,
             HashSet<string>? permittedFileExtensions = null)
         {
-            
+
 
             if (string.IsNullOrWhiteSpace(fileName))
             {
@@ -317,13 +325,47 @@ namespace Com.H.IO
             }
 
             // validate if file name has invalid characters
-            foreach (var invalidChar in Path.GetInvalidFileNameChars())
+
+            // this is a faster approach using SearchValues but won't give details about which character is invalid
+            //if (fileName.AsSpan().IndexOfAny(InvalidFileNameChars)>-1)
+            //{
+            //    throw new ArgumentException($"File name `{fileName}` contains invalid characters.");
+            //}
+
+
+
+            // Find all invalid characters, this is a compromise between performance and detailed error reporting
+            // it uses SearchValues for performance but collects all invalid characters found
+            var span = fileName.AsSpan();
+            var invalidChars = new HashSet<char>();
+            int index = 0;
+
+            while (index < span.Length)
             {
-                if (fileName.Contains(invalidChar))
-                {
-                    throw new ArgumentException($"File name `{fileName}` contains invalid character `{invalidChar}`");
-                }
+                int foundIndex = span[index..].IndexOfAny(InvalidFileNameChars);
+                if (foundIndex == -1)
+                    break;
+
+                invalidChars.Add(span[index + foundIndex]);
+                index += foundIndex + 1;
             }
+
+            if (invalidChars.Count > 0)
+            {
+                throw new ArgumentException(
+                    $"File name `{fileName}` contains invalid characters: {string.Join(", ", invalidChars.Select(c => $"`{c}`"))}");
+            }
+
+
+
+            // the below is the original way of checking invalid characters but it's slower
+            //foreach (var invalidChar in Path.GetInvalidFileNameChars())
+            //{
+            //    if (fileName.Contains(invalidChar))
+            //    {
+            //        throw new ArgumentException($"File name `{fileName}` contains invalid character `{invalidChar}`");
+            //    }
+            //}
 
 
             // validate if file name is too long
@@ -416,6 +458,227 @@ namespace Com.H.IO
         }
 
         #endregion
+
+        #region base64 file stream conversions to temp
+
+
+
+        /// <summary>
+        /// Memory-efficient streaming base64 decode and write to a file and return it's size.
+        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding
+        /// </summary>
+        public static async Task<long> WriteBase64ToFileAsync(
+            this string base64Content,
+            string filePath,
+            long? maxFileSizeInBytes = null,
+            CancellationToken? cancellationToken = null)
+        {
+            long totalBytesWritten = 0;
+
+            CancellationToken cToken = cancellationToken ?? CancellationToken.None;
+
+            try
+            {
+                await using var fileStream = new FileStream(
+                    filePath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 81920,
+                    useAsync: true);
+
+                using var transform = new FromBase64Transform();
+
+                const int chunkSize = 4096; // Must be multiple of 4 for base64
+                int offset = 0;
+
+                while (offset < base64Content.Length)
+                {
+                    int length = Math.Min(chunkSize, base64Content.Length - offset);
+
+                    // Ensure we're at a valid base64 boundary
+                    if (offset + length < base64Content.Length && length % 4 != 0)
+                    {
+                        length = (length / 4) * 4;
+                    }
+
+                    if (length == 0)
+                        break;
+
+                    // Rent buffers from ArrayPool for zero-allocation processing
+                    byte[] inputBuffer = ArrayPool<byte>.Shared.Rent(length);
+                    byte[] outputBuffer = ArrayPool<byte>.Shared.Rent(length);
+
+                    try
+                    {
+                        int bytesEncoded = Encoding.ASCII.GetBytes(
+                            base64Content.AsSpan(offset, length),
+                            inputBuffer);
+
+                        bool isFinalBlock = (offset + length >= base64Content.Length);
+
+                        if (isFinalBlock)
+                        {
+                            byte[] finalOutput = transform.TransformFinalBlock(inputBuffer, 0, bytesEncoded);
+                            await fileStream.WriteAsync(finalOutput, cToken);
+                            totalBytesWritten += finalOutput.Length;
+                        }
+                        else
+                        {
+                            int outputBytes = transform.TransformBlock(
+                                inputBuffer, 0, bytesEncoded,
+                                outputBuffer, 0);
+
+                            await fileStream.WriteAsync(
+                                outputBuffer.AsMemory(0, outputBytes),
+                                cToken);
+
+                            totalBytesWritten += outputBytes;
+                        }
+
+                        // Check size limit during processing
+                        if (maxFileSizeInBytes.HasValue && totalBytesWritten > maxFileSizeInBytes.Value)
+                        {
+                            throw new ArgumentException($"File `{filePath}` exceeds the maximum allowed size of {maxFileSizeInBytes.Value} bytes");
+                        }
+
+                        offset += length;
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(inputBuffer);
+                        ArrayPool<byte>.Shared.Return(outputBuffer);
+                    }
+                }
+
+                return totalBytesWritten;
+            }
+            catch
+            {
+                // Clean up temp file if something goes wrong
+                try { File.Delete(filePath); } catch { }
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Memory-efficient streaming base64 decode and write to temp file
+        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding
+        /// </summary>
+        public static async Task<(string tempPath, long fileSize)> WriteBase64ToTempFileAsync(
+            this string base64Content,
+            long? maxFileSizeInBytes,
+            string fileName,
+            CancellationToken cancellationToken)
+        {
+            var tempPath = Path.GetTempFileName();
+            long totalBytesWritten = 0;
+
+            try
+            {
+                await using var fileStream = new FileStream(
+                    tempPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 81920,
+                    useAsync: true);
+
+                using var transform = new FromBase64Transform();
+
+                const int chunkSize = 4096; // Must be multiple of 4 for base64
+                int offset = 0;
+
+                while (offset < base64Content.Length)
+                {
+                    int length = Math.Min(chunkSize, base64Content.Length - offset);
+
+                    // Ensure we're at a valid base64 boundary
+                    if (offset + length < base64Content.Length && length % 4 != 0)
+                    {
+                        length = (length / 4) * 4;
+                    }
+
+                    if (length == 0)
+                        break;
+
+                    // Rent buffers from ArrayPool for zero-allocation processing
+                    byte[] inputBuffer = ArrayPool<byte>.Shared.Rent(length);
+                    byte[] outputBuffer = ArrayPool<byte>.Shared.Rent(length);
+
+                    try
+                    {
+                        int bytesEncoded = Encoding.ASCII.GetBytes(
+                            base64Content.AsSpan(offset, length),
+                            inputBuffer);
+
+                        bool isFinalBlock = (offset + length >= base64Content.Length);
+
+                        if (isFinalBlock)
+                        {
+                            byte[] finalOutput = transform.TransformFinalBlock(inputBuffer, 0, bytesEncoded);
+                            await fileStream.WriteAsync(finalOutput, cancellationToken);
+                            totalBytesWritten += finalOutput.Length;
+                        }
+                        else
+                        {
+                            int outputBytes = transform.TransformBlock(
+                                inputBuffer, 0, bytesEncoded,
+                                outputBuffer, 0);
+
+                            await fileStream.WriteAsync(
+                                outputBuffer.AsMemory(0, outputBytes),
+                                cancellationToken);
+
+                            totalBytesWritten += outputBytes;
+                        }
+
+                        // Check size limit during processing
+                        if (maxFileSizeInBytes.HasValue && totalBytesWritten > maxFileSizeInBytes.Value)
+                        {
+                            throw new ArgumentException($"File `{fileName}` exceeds the maximum allowed size of {maxFileSizeInBytes.Value} bytes");
+                        }
+
+                        offset += length;
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(inputBuffer);
+                        ArrayPool<byte>.Shared.Return(outputBuffer);
+                    }
+                }
+
+                return (tempPath, totalBytesWritten);
+            }
+            catch
+            {
+                // Clean up temp file if something goes wrong
+                try { File.Delete(tempPath); } catch { }
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Calculate decoded size without fully decoding (for when content stays in JSON)
+        /// </summary>
+        public static long GetBase64DecodedSize(this string base64Content)
+        {
+            if (string.IsNullOrEmpty(base64Content))
+                return 0;
+
+            int padding = 0;
+            if (base64Content.EndsWith("=="))
+                padding = 2;
+            else if (base64Content.EndsWith("="))
+                padding = 1;
+
+            return (base64Content.Length * 3L / 4L) - padding;
+        }
+
+
+        #endregion
+
+
 
     }
 }

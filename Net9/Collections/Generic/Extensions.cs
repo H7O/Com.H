@@ -36,25 +36,37 @@ namespace Com.H.Collections.Generic
             }
             if (chamberSize < 1)
                 chamberSize = 1;
-            
+
             var enumerator = enumerable.GetEnumerator();
             var takenItems = new List<dynamic>();
-            
-            // Take the first 'chamberSize' items
-            for (int i = 0; i < chamberSize && enumerator.MoveNext(); i++)
+
+            try
             {
-                takenItems.Add(enumerator.Current);
+                // Take the first 'chamberSize' items
+                for (int i = 0; i < chamberSize && enumerator.MoveNext(); i++)
+                {
+                    takenItems.Add(enumerator.Current);
+                }
+
+                // If we took fewer items than requested, the enumerable was exhausted
+                if (takenItems.Count < chamberSize)
+                {
+                    // Enumerable is exhausted, safe to dispose the enumerator
+                    enumerator.Dispose();
+                    return new ChamberedEnumerable<dynamic>(takenItems, takenItems.Count);
+                }
+
+                // Return the taken items concatenated with remaining items
+                // Pass the enumerator to RemainingItems which will dispose it when done
+                var result = Enumerable.Concat(takenItems, enumerator.RemainingItems(true));
+                return new ChamberedEnumerable<dynamic>(result, takenItems.Count);
             }
-            
-            // If we took fewer items than requested, the enumerable was exhausted
-            if (takenItems.Count < chamberSize)
+            catch
             {
-                return new ChamberedEnumerable<dynamic>(takenItems, takenItems.Count);
+                // Ensure disposal on error
+                enumerator.Dispose();
+                throw;
             }
-            
-            // Return the taken items concatenated with remaining items
-            var result = Enumerable.Concat(takenItems, enumerator.RemainingItems());
-            return new ChamberedEnumerable<dynamic>(result, takenItems.Count);
         }
 
         /// <summary>
@@ -82,25 +94,37 @@ namespace Com.H.Collections.Generic
             }
             if (chamberSize < 1)
                 chamberSize = 1;
-            
+
             var enumerator = asyncEnumerable.GetAsyncEnumerator(cancellationToken);
             var takenItems = new List<dynamic>();
-            
-            // Take the first 'chamberSize' items
-            for (int i = 0; i < chamberSize && await enumerator.MoveNextAsync(); i++)
+
+            try
             {
-                takenItems.Add(enumerator.Current);
+                // Take the first 'chamberSize' items
+                for (int i = 0; i < chamberSize && await enumerator.MoveNextAsync(); i++)
+                {
+                    takenItems.Add(enumerator.Current);
+                }
+
+                // If we took fewer items than requested, the enumerable was exhausted
+                if (takenItems.Count < chamberSize)
+                {
+                    // Enumerable is exhausted, safe to dispose the enumerator
+                    await enumerator.DisposeAsync();
+                    return new ChamberedAsyncEnumerable<dynamic>(ToAsyncEnumerable(takenItems), takenItems.Count);
+                }
+
+                // Return the taken items concatenated with remaining items
+                // Pass the enumerator to RemainingItemsAsync which will dispose it when done
+                var result = ConcatAsyncEnumerables(ToAsyncEnumerable(takenItems), enumerator.RemainingItemsAsync(true));
+                return new ChamberedAsyncEnumerable<dynamic>(result, takenItems.Count);
             }
-            
-            // If we took fewer items than requested, the enumerable was exhausted
-            if (takenItems.Count < chamberSize)
+            catch
             {
-                return new ChamberedAsyncEnumerable<dynamic>(ToAsyncEnumerable(takenItems), takenItems.Count);
+                // Ensure disposal on error
+                await enumerator.DisposeAsync();
+                throw;
             }
-            
-            // Return the taken items concatenated with remaining items
-            var result = ConcatAsyncEnumerables(ToAsyncEnumerable(takenItems), enumerator.RemainingItemsAsync());
-            return new ChamberedAsyncEnumerable<dynamic>(result, takenItems.Count);
         }
 
         /// <summary>
@@ -108,15 +132,27 @@ namespace Com.H.Collections.Generic
         /// items as enumerable
         /// </summary>
         /// <param name="enumerator"></param>
+        /// <param name="disposeWhenDone">Whether to dispose the enumerator when iteration completes</param>
         /// <returns></returns>
         public static IEnumerable<dynamic> RemainingItems(
-            this IEnumerator<dynamic>? enumerator)
+            this IEnumerator<dynamic>? enumerator,
+            bool disposeWhenDone = false)
         {
             if (enumerator is not null)
             {
-                while (enumerator.MoveNext())
+                try
                 {
-                    yield return enumerator.Current;
+                    while (enumerator.MoveNext())
+                    {
+                        yield return enumerator.Current;
+                    }
+                }
+                finally
+                {
+                    if (disposeWhenDone)
+                    {
+                        enumerator.Dispose();
+                    }
                 }
             }
         }
@@ -126,15 +162,27 @@ namespace Com.H.Collections.Generic
         /// items as async enumerable
         /// </summary>
         /// <param name="enumerator"></param>
+        /// <param name="disposeWhenDone">Whether to dispose the enumerator when iteration completes</param>
         /// <returns></returns>
         public static async IAsyncEnumerable<dynamic> RemainingItemsAsync(
-            this IAsyncEnumerator<dynamic>? enumerator)
+            this IAsyncEnumerator<dynamic>? enumerator,
+            bool disposeWhenDone = false)
         {
             if (enumerator is not null)
             {
-                while (await enumerator.MoveNextAsync())
+                try
                 {
-                    yield return enumerator.Current;
+                    while (await enumerator.MoveNextAsync())
+                    {
+                        yield return enumerator.Current;
+                    }
+                }
+                finally
+                {
+                    if (disposeWhenDone)
+                    {
+                        await enumerator.DisposeAsync();
+                    }
                 }
             }
         }
@@ -168,7 +216,7 @@ namespace Com.H.Collections.Generic
         /// <param name="second"></param>
         /// <returns></returns>
         private static async IAsyncEnumerable<dynamic> ConcatAsyncEnumerables(
-            IAsyncEnumerable<dynamic> first, 
+            IAsyncEnumerable<dynamic> first,
             IAsyncEnumerable<dynamic> second)
         {
             await foreach (var item in first)

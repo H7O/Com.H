@@ -11,9 +11,10 @@ namespace Com.H.Collections.Generic
     /// during the ToChamberedEnumerableAsync operation
     /// </summary>
     /// <typeparam name="T">The type of elements in the async enumerable</typeparam>
-    public class ChamberedAsyncEnumerable<T> : IAsyncEnumerable<T>
+    public class ChamberedAsyncEnumerable<T> : IAsyncEnumerable<T>, IAsyncDisposable
     {
         private readonly IAsyncEnumerable<T> _asyncEnumerable;
+        private bool _disposed = false;
 
         /// <summary>
         /// Gets the actual number of items that were chambered (pre-fetched)
@@ -36,6 +37,24 @@ namespace Com.H.Collections.Generic
 
         // returns IEmerable<T> for compatibility with LINQ methods
         public IEnumerable<T> AsEnumerable() => _asyncEnumerable.ToBlockingEnumerable();
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                // Dispose the underlying enumerable if it's disposable
+                if (_asyncEnumerable is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (_asyncEnumerable is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
     }
 
 }

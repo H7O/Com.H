@@ -12,9 +12,10 @@ namespace Com.H.Collections.Generic
     /// during the ToChamberedEnumerable operation
     /// </summary>
     /// <typeparam name="T">The type of elements in the enumerable</typeparam>
-    public class ChamberedEnumerable<T> : IEnumerable<T>
+    public class ChamberedEnumerable<T> : IEnumerable<T>, IDisposable, IAsyncDisposable
     {
         private readonly IEnumerable<T> _enumerable;
+        private bool _disposed = false;
 
         /// <summary>
         /// Gets the actual number of items that were chambered (pre-fetched)
@@ -34,5 +35,37 @@ namespace Com.H.Collections.Generic
 
         public IEnumerator<T> GetEnumerator() => _enumerable.GetEnumerator();
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                // Dispose the underlying enumerable if it's disposable
+                if (_enumerable is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                // Dispose the underlying enumerable if it's disposable
+                if (_enumerable is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync();
+                }
+                else if (_enumerable is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
     }
 }

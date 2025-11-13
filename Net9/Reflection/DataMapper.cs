@@ -73,7 +73,9 @@ namespace Com.H.Reflection
             if (source is not IDictionary<string, object?> srcProperties) return default;
 
 
-            var joined = dstProperties.LeftJoin(
+            var joined =
+                Com.H.Linq.JoinExtensions.LeftJoin(
+                dstProperties,
                 srcProperties,
                 dst => dst.Name.ToUpper(CultureInfo.InvariantCulture),
                 src => src.Key.ToUpper(CultureInfo.InvariantCulture),
@@ -137,7 +139,9 @@ namespace Com.H.Reflection
             var srcProperties = this.GetCachedProperties(source.GetType());
             var dstProperties = this.GetCachedProperties(typeof(T));
 
-            var joined = dstProperties.LeftJoin(
+            var joined =
+                Com.H.Linq.JoinExtensions.LeftJoin(
+                dstProperties,
                 srcProperties,
                 dst => dst.Name.ToUpper(CultureInfo.InvariantCulture),
                 src => src.Name.ToUpper(CultureInfo.InvariantCulture),
@@ -193,7 +197,9 @@ namespace Com.H.Reflection
                                 GetPropertiesWithColumnName(destination.GetType()).ToArray());
 
 
-            var joined = dstProperties.LeftJoin(
+            var joined =
+                Com.H.Linq.JoinExtensions.LeftJoin(
+                dstProperties,
                 srcProperties,
                 dst => dst.Name.ToUpper(CultureInfo.InvariantCulture),
                 src => src.Name.ToUpper(CultureInfo.InvariantCulture),

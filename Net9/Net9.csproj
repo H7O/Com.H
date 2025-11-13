@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <ApplicationIcon>128x128.ico</ApplicationIcon>
-    <Version>9.0.0.6</Version>
+    <Version>10.0.0.0</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -20,11 +19,8 @@
     <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="128x128.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="..\128x128.jpg">
@@ -36,6 +32,5 @@
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
-
 
 </Project>

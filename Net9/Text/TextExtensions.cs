@@ -168,8 +168,10 @@ namespace Com.H.Text
 
             if (paramList.Count > 0)
             {
-                var joined = paramList
-                    .LeftJoin(parameters,
+                var joined =
+                    Com.H.Linq.JoinExtensions.LeftJoin(
+                    paramList,
+                    parameters,
                     pl => pl.ToUpper(CultureInfo.InvariantCulture),
                     p => p.Key.ToUpper(CultureInfo.InvariantCulture),
                     (pl, p) => new { k = pl, v = p.Value }).ToList();
@@ -464,8 +466,10 @@ namespace Com.H.Text
 
                 if (paramList.Count > 0)
                 {
-                    var joined = paramList
-                        .LeftJoin(parameters,
+                    var joined =
+                        Com.H.Linq.JoinExtensions.LeftJoin(
+                        paramList,
+                        parameters,
                         pl => pl.ToUpper(CultureInfo.InvariantCulture),
                         p => p.Key.ToUpper(CultureInfo.InvariantCulture),
                         (pl, p) => new { k = pl, v = p.Value }).ToList();

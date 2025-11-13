@@ -135,6 +135,9 @@ namespace Com.H.Cache
             }
         }
 
+        /// <summary>
+        /// Disposes the cache by cancelling any auto-cleanup tasks and clearing expired items.
+        /// </summary>
         public void Dispose()
         {
             try

@@ -238,6 +238,17 @@ namespace Com.H.Linq
             return seed;
         }
 
+        /// <summary>
+        /// Aggregates elements of a sequence while a condition is true.
+        /// </summary>
+        /// <typeparam name="TSource">The type of elements in the source sequence</typeparam>
+        /// <typeparam name="TAccumulate">The type of the accumulator value</typeparam>
+        /// <param name="source">The source sequence</param>
+        /// <param name="seed">The initial accumulator value</param>
+        /// <param name="func">The function to apply to each element and the accumulator</param>
+        /// <param name="whileCheck">The condition that must be true to continue aggregating</param>
+        /// <returns>The final accumulator value</returns>
+        /// <exception cref="ArgumentNullException">Thrown when source, func, or whileCheck is null</exception>
         public static TAccumulate? AggregateWhile<TSource, TAccumulate>(
             this IEnumerable<TSource> source,
             TAccumulate? seed,

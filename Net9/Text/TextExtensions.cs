@@ -379,9 +379,16 @@ namespace Com.H.Text
               openingMarker,
               closingMarker,
               nullValueReplacement
-              );
+                );
         }
 
+        /// <summary>
+        /// Fills a string with placeholders using multiple QueryParams configurations.
+        /// Each QueryParams can have different opening/closing markers and data models.
+        /// </summary>
+        /// <param name="src">The source string containing placeholders</param>
+        /// <param name="queryParams">Collection of QueryParams configurations to apply</param>
+        /// <returns>String with all placeholders filled</returns>
         public static string Fill(
             this string src,
             IEnumerable<QueryParams>? queryParams
@@ -487,6 +494,12 @@ namespace Com.H.Text
             return Regex.Replace(text, openingMarker + @"(?<param>.*?)?" + closingMarker, nullValueReplacement??"");
         }
 
+        /// <summary>
+        /// Removes the specified number of characters from the end of a string.
+        /// </summary>
+        /// <param name="src">The source string</param>
+        /// <param name="charCount">Number of characters to remove from the end. If null, returns the string unchanged.</param>
+        /// <returns>The string with characters removed from the end, or the original string if charCount is null or the string is too short</returns>
         public static string? RemoveLast(this string src, int? charCount = null)
             => (charCount == null || src == null || src.Length<1)?src
                 : src.Remove(src.Length - (int)charCount);

@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Com.H.Threading
 {
+    /// <summary>
+    /// Provides an asynchronous alternative to Monitor with support for timeouts and cancellation.
+    /// </summary>
     public class AsyncMonitor
     {
         internal class MonitorItem
@@ -14,6 +17,12 @@ namespace Com.H.Threading
         }
         private readonly ConcurrentDictionary<object, Lazy<MonitorItem>> waitList = new();
 
+        /// <summary>
+        /// Asynchronous version of Monitor.Enter with cancellation support.
+        /// </summary>
+        /// <param name="lockOb">The lock object</param>
+        /// <param name="cToken">Cancellation token to cancel the awaitable returned task</param>
+        /// <returns>Awaitable Task</returns>
         public async Task Enter(object lockOb, CancellationToken cToken)
             => await this.Enter(lockOb, null, cToken);
         /// <summary>

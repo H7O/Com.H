@@ -45,9 +45,18 @@ namespace Com.H.Threading
         private readonly TimeSpan? _delay;
 
 
+        /// <summary>
+        /// Initializes a new instance of the Awaiter class with an optional cancellation token.
+        /// </summary>
+        /// <param name="cToken">Optional cancellation token to cancel waiting operations</param>
         public Awaiter(CancellationToken? cToken = null)
             => this._cToken = cToken;
 
+        /// <summary>
+        /// Initializes a new instance of the Awaiter class with a default delay and optional cancellation token.
+        /// </summary>
+        /// <param name="delay">Default delay to use when waiting</param>
+        /// <param name="cToken">Optional cancellation token to cancel waiting operations</param>
         public Awaiter(TimeSpan delay, CancellationToken? cToken = null) 
             => (this._delay, this._cToken) = (delay, cToken);
 
@@ -55,6 +64,10 @@ namespace Com.H.Threading
         private readonly ConcurrentDictionary<object, Lazy<CancellationTokenSource>> waitList = new();
         private bool disposedValue;
 
+        /// <summary>
+        /// Unlocks the specified lock object, allowing any waiting threads to proceed.
+        /// </summary>
+        /// <param name="lockObj">The lock object to unlock</param>
         public void Unlock(object lockObj)
         {
             this.waitList.GetOrAdd(lockObj, _ =>
@@ -73,25 +86,46 @@ namespace Com.H.Threading
         /// <summary>
         /// True if the lockObj is still locked, false if it's unlocked or doesn't exist
         /// </summary>
-        /// <param name="lockObj"></param>
-        /// <returns></returns>
+        /// <param name="lockObj">The lock object to check</param>
+        /// <returns>True if locked, false otherwise</returns>
         public bool IsLocked(object lockObj)
             => this.waitList.TryGetValue(lockObj, out var item)
                 && item?.Value?.IsCancellationRequested == false;
 
+        /// <summary>
+        /// Returns true if all specified lock objects are locked.
+        /// </summary>
+        /// <param name="lockObjs">Collection of lock objects to check</param>
+        /// <returns>True if all lock objects are locked, false otherwise</returns>
         public bool AreAllLocked(IEnumerable<object> lockObjs)
             => lockObjs.All(x => this.IsLocked(x));
 
+        /// <summary>
+        /// Returns true if the lock object is unlocked or doesn't exist.
+        /// </summary>
+        /// <param name="lockObj">The lock object to check</param>
+        /// <returns>True if unlocked, false otherwise</returns>
         public bool IsUnlocked(object lockObj)
             => this.waitList.TryGetValue(lockObj, out var item)
                 && item?.Value?.IsCancellationRequested == true;
 
 
+        /// <summary>
+        /// Returns true if all specified lock objects are unlocked.
+        /// </summary>
+        /// <param name="lockObjs">Collection of lock objects to check</param>
+        /// <returns>True if all lock objects are unlocked, false otherwise</returns>
         public bool AreAllUnlocked(IEnumerable<object> lockObjs)
             => lockObjs.All(x => this.IsUnlocked(x));
 
 
 
+        /// <summary>
+        /// Wait for the specified lock object to be unlocked.
+        /// </summary>
+        /// <param name="lockObj">The lock object to wait for</param>
+        /// <param name="cToken">Optional cancellation token</param>
+        /// <returns>A task that completes when the lock is unlocked</returns>
         public async Task WaitFor(object lockObj, CancellationToken? cToken)
         => await this.WaitFor(lockObj, null, cToken);
         
@@ -101,8 +135,9 @@ namespace Com.H.Threading
         /// Wait for a complete call on a lock object or a group of lock objects (group of lock objects can be passed in IEnumerable of objects) 
         /// </summary>
         /// <param name="lockObj">Could be a single object, or an IEnumerable of objects</param>
-        /// <param name="delay"></param>
-        /// <returns></returns>
+        /// <param name="delay">Optional delay timeout</param>
+        /// <param name="cToken">Optional cancellation token</param>
+        /// <returns>A task that completes when all specified locks are unlocked</returns>
         public async Task WaitFor(object lockObj, TimeSpan? delay = null, CancellationToken? cToken = null)
         {
             if (lockObj is null) throw new ArgumentNullException(nameof(lockObj));
@@ -133,6 +168,10 @@ namespace Com.H.Threading
             { }
         }
 
+        /// <summary>
+        /// Disposes the Awaiter, releasing all locks and cancelling all waiting operations.
+        /// </summary>
+        /// <param name="disposing">True if disposing managed resources</param>
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
@@ -163,6 +202,9 @@ namespace Com.H.Threading
         //     Dispose(disposing: false);
         // }
 
+        /// <summary>
+        /// Disposes the Awaiter, releasing all resources.
+        /// </summary>
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method

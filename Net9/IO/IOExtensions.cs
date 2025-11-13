@@ -464,9 +464,15 @@ namespace Com.H.IO
 
 
         /// <summary>
-        /// Memory-efficient streaming base64 decode and write to a file and return it's size.
-        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding
+        /// Memory-efficient streaming base64 decode and write to a file and return its size.
+        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding.
         /// </summary>
+        /// <param name="base64Content">The base64 encoded content to decode</param>
+        /// <param name="filePath">The file path where the decoded content will be written</param>
+        /// <param name="maxFileSizeInBytes">Optional maximum file size limit in bytes</param>
+        /// <param name="cancellationToken">Optional cancellation token</param>
+        /// <returns>The total number of bytes written to the file</returns>
+        /// <exception cref="ArgumentException">Thrown when file size exceeds the maximum allowed size</exception>
         public static async Task<long> WriteBase64ToFileAsync(
             this string base64Content,
             string filePath,
@@ -562,9 +568,15 @@ namespace Com.H.IO
         }
 
         /// <summary>
-        /// Memory-efficient streaming base64 decode and write to temp file
-        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding
+        /// Memory-efficient streaming base64 decode and write to a temporary file.
+        /// Uses ArrayPool for buffer management and FromBase64Transform for chunked decoding.
         /// </summary>
+        /// <param name="base64Content">The base64 encoded content to decode</param>
+        /// <param name="maxFileSizeInBytes">Optional maximum file size limit in bytes</param>
+        /// <param name="fileName">The name of the file (used in error messages)</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A tuple containing the temporary file path and the file size in bytes</returns>
+        /// <exception cref="ArgumentException">Thrown when file size exceeds the maximum allowed size</exception>
         public static async Task<(string tempPath, long fileSize)> WriteBase64ToTempFileAsync(
             this string base64Content,
             long? maxFileSizeInBytes,
@@ -659,8 +671,10 @@ namespace Com.H.IO
         }
 
         /// <summary>
-        /// Calculate decoded size without fully decoding (for when content stays in JSON)
+        /// Calculates the decoded size of base64 content without fully decoding it.
         /// </summary>
+        /// <param name="base64Content">The base64 encoded content</param>
+        /// <returns>The size in bytes that the decoded content would occupy</returns>
         public static long GetBase64DecodedSize(this string base64Content)
         {
             if (string.IsNullOrEmpty(base64Content))

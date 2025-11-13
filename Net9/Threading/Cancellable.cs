@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Com.H.Threading
 {
+    /// <summary>
+    /// Provides methods for running actions and functions with cancellation support and timeout handling.
+    /// </summary>
     public static class Cancellable
     {
         /// <summary>
@@ -41,6 +44,14 @@ namespace Com.H.Threading
                 && delayTask.IsCompleted
                 ) actionOnTimeout();
         }
+        /// <summary>
+        /// Runs an action with cancellation support and optional timeout.
+        /// The action can be interrupted via the cancellation token.
+        /// </summary>
+        /// <param name="action">The action to run</param>
+        /// <param name="token">Cancellation token to cancel the action</param>
+        /// <param name="timeout">Optional timeout to wait before interrupting the action after cancellation is requested</param>
+        /// <exception cref="ArgumentNullException">Thrown when action is null</exception>
         public static void CancellableRun(Action action, CancellationToken token, TimeSpan? timeout = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -179,6 +190,15 @@ namespace Com.H.Threading
 
             return default;
         }
+        /// <summary>
+        /// Runs an action asynchronously with cancellation support and optional timeout.
+        /// The action can be interrupted via the cancellation token.
+        /// </summary>
+        /// <param name="action">The action to run</param>
+        /// <param name="token">Cancellation token to cancel the action</param>
+        /// <param name="timeout">Optional timeout to wait before interrupting the action after cancellation is requested</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        /// <exception cref="ArgumentNullException">Thrown when action is null</exception>
         public static Task CancellableRunAsync(Action action, CancellationToken token, TimeSpan? timeout = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
@@ -252,6 +272,16 @@ namespace Com.H.Threading
             return t;
         }
 
+        /// <summary>
+        /// Runs a function asynchronously with cancellation support and optional timeout, returning the result.
+        /// The function can be interrupted via the cancellation token.
+        /// </summary>
+        /// <typeparam name="T">The return type of the function</typeparam>
+        /// <param name="func">The function to run</param>
+        /// <param name="token">Cancellation token to cancel the function</param>
+        /// <param name="timeout">Optional timeout to wait before interrupting the function after cancellation is requested</param>
+        /// <returns>A task representing the asynchronous operation with the result</returns>
+        /// <exception cref="ArgumentNullException">Thrown when func is null</exception>
         public static Task<T?> CancellableRunAsync<T>(Func<T> func, CancellationToken token, TimeSpan? timeout = null)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));

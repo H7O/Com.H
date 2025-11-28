@@ -32,6 +32,6 @@ namespace Com.H.Threading
         /// <summary>
         /// Tells whether or not the gate is open
         /// </summary>
-        public bool IsOpen => gate == 1;
+        public bool IsOpen => Volatile.Read(ref gate) == 1;
     }
 }

@@ -166,6 +166,7 @@ namespace Com.H.Pdf
                         throw new MissingFieldException("Cannot find chrome in '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'. "
                                                     + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
                 }
+#if NET8_0_OR_GREATER
                 if (InteropExt.CurrentOSPlatform == OSPlatform.FreeBSD)
                 {
                     if (File.Exists("/usr/local/bin/chrome"))
@@ -174,6 +175,7 @@ namespace Com.H.Pdf
                         throw new MissingFieldException("Cannot find chrome in '/usr/local/bin/chrome'. "
                             + $"Please set {nameof(PdfConverterPath)} to chrome executable path, or to any other PDF CLI converter app");
                 }
+#endif
             }
             
             if (string.IsNullOrWhiteSpace(PdfConverterPath)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET8_0_OR_GREATER
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Dynamic;
@@ -205,3 +206,4 @@ namespace Com.H.Text.Json
 
     }
 }
+#endif

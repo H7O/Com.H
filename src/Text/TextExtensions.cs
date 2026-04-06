@@ -101,7 +101,7 @@ namespace Com.H.Text
         public static IEnumerable<int> ExtractInts(this string text)
         {
             foreach (var match in Regex.Matches(text, @"-?\d+", RegexOptions.Singleline)
-                .Where(m=>m is not null))
+                .Cast<Match>().Where(m=>m is not null))
                 yield return int.Parse(match.ToString(), CultureInfo.InvariantCulture);
         }
 
@@ -296,8 +296,15 @@ namespace Com.H.Text
         {
 
             var dates_string = text.Split(seperators?? new string[] { "|" },
-                  StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                  StringSplitOptions.RemoveEmptyEntries
+#if NET5_0_OR_GREATER
+                  | StringSplitOptions.TrimEntries
+#endif
+                  )
                 .AsEnumerable();
+#if !NET5_0_OR_GREATER
+            dates_string = dates_string.Select(x => x.Trim());
+#endif
 
             // normal
             var normal = dates_string
@@ -424,16 +431,28 @@ namespace Com.H.Text
             {
                 foreach (var item in paramList)
                 {
-                    if (item.Value == null) src = src
-                        .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
+                    var searchStr = item.OpenMarker + item.VarName + item.CloseMarker;
+                    if (item.Value == null)
+                    {
+#if NET8_0_OR_GREATER
+                        src = src.Replace(searchStr,
                             item.NullReplacement, true,
                             CultureInfo.InstalledUICulture);
+#else
+                        src = Regex.Replace(src, Regex.Escape(searchStr),
+                            item.NullReplacement ?? "", RegexOptions.IgnoreCase);
+#endif
+                    }
                     else
                     {
-                        src = src
-                        .Replace(item.OpenMarker + item.VarName + item.CloseMarker,
-                        item.Value.ToString(), true,
+#if NET8_0_OR_GREATER
+                        src = src.Replace(searchStr,
+                            item.Value.ToString(), true,
                             CultureInfo.InvariantCulture);
+#else
+                        src = Regex.Replace(src, Regex.Escape(searchStr),
+                            item.Value.ToString() ?? "", RegexOptions.IgnoreCase);
+#endif
                     }
                 }
 

@@ -31,7 +31,7 @@ namespace Com.H.Net.Mail
         public List<string> To { get; private set; } = new();
         public string? ToStr
         {
-            get => this.To is null?null:string.Join(',', this.To);
+            get => this.To is null?null:string.Join(",", this.To);
             set
             {
                 if (string.IsNullOrWhiteSpace(value)) 
@@ -42,7 +42,10 @@ namespace Com.H.Net.Mail
 
                 foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
                   StringSplitOptions.RemoveEmptyEntries
-                  | StringSplitOptions.TrimEntries).Where(x =>
+#if NET5_0_OR_GREATER
+                  | StringSplitOptions.TrimEntries
+#endif
+                  ).Where(x =>
                   !string.IsNullOrWhiteSpace(x)
                   ))
                     this.To.Add(email);
@@ -57,7 +60,7 @@ namespace Com.H.Net.Mail
         public List<string> Cc { get; private set; } = new();
         public string? CcStr
         {
-            get => this.Cc is null?null:string.Join(',', this.Cc);
+            get => this.Cc is null?null:string.Join(",", this.Cc);
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -68,7 +71,10 @@ namespace Com.H.Net.Mail
 
                 foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
                   StringSplitOptions.RemoveEmptyEntries
-                  | StringSplitOptions.TrimEntries).Where(x =>
+#if NET5_0_OR_GREATER
+                  | StringSplitOptions.TrimEntries
+#endif
+                  ).Where(x =>
                   !string.IsNullOrWhiteSpace(x)
                   ))
                     this.Cc.Add(email);
@@ -82,7 +88,7 @@ namespace Com.H.Net.Mail
         public List<string> Bcc { get; private set; } = new();
         public string? BccStr
         {
-            get => this.Bcc is null?null:string.Join(',', this.Bcc);
+            get => this.Bcc is null?null:string.Join(",", this.Bcc);
             set
             {
                 if (string.IsNullOrWhiteSpace(value))
@@ -93,7 +99,10 @@ namespace Com.H.Net.Mail
 
                 foreach (var email in value.Split(new char[] { ',', ' ', ';', '\r', '\n' },
                   StringSplitOptions.RemoveEmptyEntries
-                  | StringSplitOptions.TrimEntries).Where(x =>
+#if NET5_0_OR_GREATER
+                  | StringSplitOptions.TrimEntries
+#endif
+                  ).Where(x =>
                   !string.IsNullOrWhiteSpace(x)
                   ))
                     this.Bcc.Add(email);
@@ -191,7 +200,11 @@ namespace Com.H.Net.Mail
                     .Replace("\r", " ")
                     .Replace("\n", " ");
             var task = (token == null ? client.SendMailAsync(this.Msg)
+#if NET8_0_OR_GREATER
                 : client.SendMailAsync(this.Msg, (CancellationToken)token));
+#else
+                : client.SendMailAsync(this.Msg));
+#endif
             task.ConfigureAwait(true);
             return task;
         }

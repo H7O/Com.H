@@ -36,7 +36,7 @@ namespace Com.H.Net.Mail
                 .EnsureParentDirectory()))
             {
                 if (cancellationToken != null)
-                    stream.CopyToAsync(f,
+                    stream.CopyToAsync(f, 81920,
                         (CancellationToken)cancellationToken)
                         .GetAwaiter().GetResult();
                 else stream.CopyTo(f);

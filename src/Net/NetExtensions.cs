@@ -54,8 +54,12 @@ namespace Com.H.Net
 
             client.DefaultRequestHeaders.Add("Connection", "keep-alive");
 
+#if NET8_0_OR_GREATER
             return cToken != null ? await client.GetByteArrayAsync(uri, (CancellationToken)cToken)
                 : await client.GetByteArrayAsync(uri);
+#else
+            return await client.GetByteArrayAsync(uri.AbsoluteUri);
+#endif
             
         }
 
@@ -76,9 +80,13 @@ namespace Com.H.Net
             if (uri.IsFile)
             {
                 if (!File.Exists(uri.LocalPath)) throw new FileNotFoundException($"File not found: {uri.LocalPath}", uri.LocalPath);
+#if NET8_0_OR_GREATER
                 return cToken is null? await File.ReadAllTextAsync(uri.LocalPath)
                     :
                     await File.ReadAllTextAsync(uri.LocalPath, (CancellationToken)cToken);
+#else
+                return await Task.FromResult(File.ReadAllText(uri.LocalPath));
+#endif
             }
             HttpClient client = NewHttpClient();
             if (!string.IsNullOrWhiteSpace(referer))
@@ -124,7 +132,7 @@ namespace Com.H.Net
                 uri.AbsoluteUri.Remove(uri.AbsoluteUri.Length - 1) : uri.AbsoluteUri;
             var lastIndexOfSeperator = uriPath.LastIndexOf("/");
             if (lastIndexOfSeperator > -1)
-                return new Uri(uriPath[..(lastIndexOfSeperator + 1)], UriKind.Absolute);
+                return new Uri(uriPath.Substring(0, lastIndexOfSeperator + 1), UriKind.Absolute);
             return new Uri(uri.AbsoluteUri, UriKind.Absolute);
         }
 

@@ -1,4 +1,5 @@
-﻿using Com.H.Collections.Concurrent;
+﻿#if NET8_0_OR_GREATER
+using Com.H.Collections.Concurrent;
 using Com.H.Threading;
 using System;
 using System.Collections.Generic;
@@ -408,3 +409,4 @@ namespace Com.H.IO.InProgress
     }
 
 }
+#endif

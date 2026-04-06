@@ -74,7 +74,11 @@ namespace Com.H.Threading
             {
                 return new Lazy<CancellationTokenSource>
                 (
+#if NET5_0_OR_GREATER
                     new CancellationTokenSource()
+#else
+                    () => new CancellationTokenSource()
+#endif
                 );
             }).Value?.Cancel();
         }
@@ -150,8 +154,12 @@ namespace Com.H.Threading
 
             var cts = this.waitList.GetOrAdd(lockObj, _ =>
             {
-                return new Lazy<CancellationTokenSource>( 
+                return new Lazy<CancellationTokenSource>(
+#if NET5_0_OR_GREATER
                     ((cToken??this._cToken) == null ? new CancellationTokenSource()
+#else
+                    () => ((cToken??this._cToken) == null ? new CancellationTokenSource()
+#endif
                     // no possible path for null
 #pragma warning disable CS8629 // Nullable value type may be null. 
                 : CancellationTokenSource.CreateLinkedTokenSource((CancellationToken)(cToken ?? this._cToken)))

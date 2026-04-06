@@ -153,7 +153,7 @@ namespace Com.H.Linq
             if (checkRoot is not null)
             {
                 if (!checkRoot(traversableItem, nodes[0])) return default;
-                return FindDescendants(traversableItem, path[nodes[0].Length..], findChildren, pathDelimiters);
+                return FindDescendants(traversableItem, path.Substring(nodes[0].Length), findChildren, pathDelimiters);
             }
             // ignore null reference warnings as the code analyzer unable to detect the references are
             // already pre-checked for nulls
@@ -229,9 +229,9 @@ namespace Com.H.Linq
             Func<TAccumulate?, TSource?, TAccumulate?> func,
             Func<TAccumulate?, TSource?, bool> untilCheck)
         {
-            ArgumentNullException.ThrowIfNull(source);
-            ArgumentNullException.ThrowIfNull(func);
-            ArgumentNullException.ThrowIfNull(untilCheck);
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (func == null) throw new ArgumentNullException(nameof(func));
+            if (untilCheck == null) throw new ArgumentNullException(nameof(untilCheck));
 
             _ = source.Any(x => untilCheck(seed = func(seed, x), x));
 
@@ -255,9 +255,9 @@ namespace Com.H.Linq
             Func<TAccumulate?, TSource?, TAccumulate?> func,
             Func<TAccumulate?, TSource?, bool> whileCheck)
         {
-            ArgumentNullException.ThrowIfNull(source);
-            ArgumentNullException.ThrowIfNull(func);
-            ArgumentNullException.ThrowIfNull(whileCheck);
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (func == null) throw new ArgumentNullException(nameof(func));
+            if (whileCheck == null) throw new ArgumentNullException(nameof(whileCheck));
             
             foreach (var item in source)
             {

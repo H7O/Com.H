@@ -54,16 +54,30 @@ namespace Com.H.Xml.Linq
                     AddProperty(e.Name.LocalName, e.Value);
 
             foreach (var item in properties)
+#if NET5_0_OR_GREATER
                 obj.TryAdd(item.Key,
                         item.Value.Count switch
                         {
                             1 => item.Value[0],
                             _ => item.Value.ToList()
                         });
+#else
+                ((IDictionary<string, object?>)obj)[item.Key] =
+                        item.Value.Count switch
+                        {
+                            1 => item.Value[0],
+                            _ => item.Value.ToList()
+                        };
+#endif
 
             foreach (var e in xElement.Elements().Where(x => x.HasAttributes || x.HasElements))
+#if NET5_0_OR_GREATER
                 obj.TryAdd((properties.ContainsKey(e.Name.LocalName) ? "_" : "")
                     + e.Name.LocalName, (object?)e.AsDynamic(true));
+#else
+                ((IDictionary<string, object?>)obj)[(properties.ContainsKey(e.Name.LocalName) ? "_" : "")
+                    + e.Name.LocalName] = (object?)e.AsDynamic(true);
+#endif
 
             return obj;
         }

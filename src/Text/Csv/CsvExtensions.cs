@@ -30,16 +30,42 @@ namespace Com.H.Text.Csv
         {
             if (rowDelimieter == null) throw new ArgumentNullException(nameof(rowDelimieter));
             if (colDelimieter == null) throw new ArgumentNullException(nameof(colDelimieter));
-            var data = text.Split(rowDelimieter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            var headers = data.First().Split(colDelimieter, StringSplitOptions.TrimEntries);
+            var data = text.Split(rowDelimieter, StringSplitOptions.RemoveEmptyEntries
+#if NET5_0_OR_GREATER
+                | StringSplitOptions.TrimEntries
+#endif
+                );
+            var headers = data.First().Split(colDelimieter,
+#if NET5_0_OR_GREATER
+                StringSplitOptions.TrimEntries
+#else
+                StringSplitOptions.None
+#endif
+                );
+#if !NET5_0_OR_GREATER
+            headers = headers.Select(h => h.Trim()).ToArray();
+#endif
             var rows = data.Skip(1).Select(col =>
-                col.Split(colDelimieter, StringSplitOptions.TrimEntries));
+                col.Split(colDelimieter,
+#if NET5_0_OR_GREATER
+                StringSplitOptions.TrimEntries
+#else
+                StringSplitOptions.None
+#endif
+                ));
+#if !NET5_0_OR_GREATER
+            rows = rows.Select(r => r.Select(c => c.Trim()).ToArray());
+#endif
 
             return rows.Select(r =>
             {
                 System.Dynamic.ExpandoObject exObj = new();
                 foreach (var item in r.Zip(headers, (c, h) => new { c, h }))
+#if NET5_0_OR_GREATER
                     exObj.TryAdd(item.h, item.c);
+#else
+                    ((IDictionary<string, object?>)exObj)[item.h] = item.c;
+#endif
                 return (dynamic)exObj;
             });
         }
@@ -87,10 +113,16 @@ namespace Com.H.Text.Csv
                 #region headers
                 if (!excludeHeaders && !headersSet)
                 {
+#if NET8_0_OR_GREATER
                     await writer.WriteAsync(
                         (properties.Select(x => x.Name)
                         .ToCsv(delimiter) + "\r\n").AsMemory(),
                         cancellationToken ?? default);
+#else
+                    await writer.WriteAsync(
+                        properties.Select(x => x.Name)
+                        .ToCsv(delimiter) + "\r\n");
+#endif
                     
                     await writer.FlushAsync();
                     headersSet = true;
@@ -98,11 +130,16 @@ namespace Com.H.Text.Csv
                 #endregion
 
                 #region data
+#if NET8_0_OR_GREATER
                 await writer.WriteAsync(
                     (
                         $"{properties.Select(x => x.Info.GetValue(item)?.ToString()??"").ToCsv(delimiter)}\r\n"
                     ).AsMemory(),
                     cancellationToken ?? default);
+#else
+                await writer.WriteAsync(
+                    $"{properties.Select(x => x.Info.GetValue(item)?.ToString()??"").ToCsv(delimiter)}\r\n");
+#endif
                 await writer.FlushAsync();
                 #endregion
             }

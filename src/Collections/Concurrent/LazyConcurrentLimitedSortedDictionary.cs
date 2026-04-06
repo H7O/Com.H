@@ -41,7 +41,11 @@ namespace Com.H.Collections.Concurrent
             this._dic = new ConcurrentLimitedSortedDictionary<TKey, Lazy<TValue?>>(
                 limit,
                 keyValuePairs.Select(x =>
+#if NET5_0_OR_GREATER
                     new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
+#else
+                    new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(() => x.Value))
+#endif
                 ));
         }
 
@@ -57,7 +61,11 @@ namespace Com.H.Collections.Concurrent
             this._dic = new ConcurrentLimitedSortedDictionary<TKey, Lazy<TValue?>>(
                 limit,
                  keyValuePairs.Select(x =>
+#if NET5_0_OR_GREATER
                     new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(x.Value))
+#else
+                    new KeyValuePair<TKey, Lazy<TValue?>>(x.Key, new Lazy<TValue?>(() => x.Value))
+#endif
                     ), comparer);
         }
 
@@ -98,8 +106,13 @@ namespace Com.H.Collections.Concurrent
         public TValue? AddOrUpdate(TKey key, TValue? value, Func<TKey, TValue?, TValue?> updateValueFactory)
             => this._dic.AddOrUpdate(
                 key,
+#if NET5_0_OR_GREATER
                 new Lazy<TValue?>(value),
+                (k, oldItem) => new Lazy<TValue?>(updateValueFactory(k, oldItem.Value)))
+#else
+                new Lazy<TValue?>(() => value),
                 (k, oldItem) => new Lazy<TValue?>(() => updateValueFactory(k, oldItem.Value)))
+#endif
                 .Value;
 
         /// <summary>
@@ -245,7 +258,11 @@ namespace Com.H.Collections.Concurrent
         }
 
         public bool TryAdd(TKey key, TValue? value)
+#if NET5_0_OR_GREATER
             => this._dic.TryAdd(key, new Lazy<TValue?>(value));
+#else
+            => this._dic.TryAdd(key, new Lazy<TValue?>(() => value));
+#endif
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
             => this.GetEnumerator();

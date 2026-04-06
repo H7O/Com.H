@@ -1,6 +1,8 @@
 ﻿using Com.H.Threading;
 using System;
+#if NET8_0_OR_GREATER
 using System.Buffers;
+#endif
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -186,7 +188,7 @@ namespace Com.H.IO
 
         public static bool IsWritableFolder(this Uri? uri)
         {
-            ArgumentNullException.ThrowIfNull(uri);
+            if (uri == null) throw new ArgumentNullException(nameof(uri));
             if (!uri.IsFile) return false;
             return IsWritableFolder(uri.LocalPath);
         }
@@ -261,8 +263,13 @@ namespace Com.H.IO
 
 
         // Precompute invalid file name characters for performance
+#if NET8_0_OR_GREATER
         public static readonly SearchValues<char> InvalidFileNameChars =
         SearchValues.Create(Path.GetInvalidFileNameChars());
+#else
+        private static readonly HashSet<char> InvalidFileNameChars =
+            new HashSet<char>(Path.GetInvalidFileNameChars());
+#endif
 
 
 
@@ -336,8 +343,9 @@ namespace Com.H.IO
 
             // Find all invalid characters, this is a compromise between performance and detailed error reporting
             // it uses SearchValues for performance but collects all invalid characters found
-            var span = fileName.AsSpan();
             var invalidChars = new HashSet<char>();
+#if NET8_0_OR_GREATER
+            var span = fileName.AsSpan();
             int index = 0;
 
             while (index < span.Length)
@@ -349,6 +357,13 @@ namespace Com.H.IO
                 invalidChars.Add(span[index + foundIndex]);
                 index += foundIndex + 1;
             }
+#else
+            foreach (char c in fileName)
+            {
+                if (InvalidFileNameChars.Contains(c))
+                    invalidChars.Add(c);
+            }
+#endif
 
             if (invalidChars.Count > 0)
             {
@@ -461,7 +476,7 @@ namespace Com.H.IO
 
         #region base64 file stream conversions to temp
 
-
+#if NET8_0_OR_GREATER
 
         /// <summary>
         /// Memory-efficient streaming base64 decode and write to a file and return its size.
@@ -689,6 +704,7 @@ namespace Com.H.IO
             return (base64Content.Length * 3L / 4L) - padding;
         }
 
+#endif
 
         #endregion
 

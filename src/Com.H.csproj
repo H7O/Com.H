@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.1.0.0</Version>
+    <Version>10.1.0.1</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -16,7 +16,7 @@
     <PackageReadmeFile>nuget.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
-    <PackageReleaseNotes>Consolidated netstandard2.0 support into the main package. A single NuGet package now multi-targets netstandard2.0, net8.0, net9.0, and net10.0. The separate 2.0.0.x netstandard2.0 package line is no longer needed.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed ChamberedEnumerable/ChamberedAsyncEnumerable disposal: when more items remain past the chambered slice, Dispose/DisposeAsync on the chambered wrapper now releases the original source too. Previously the underlying source (e.g. a DbQueryResult holding an open reader) could stay alive if the caller abandoned iteration mid-probe.</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

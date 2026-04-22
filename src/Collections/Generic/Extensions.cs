@@ -53,13 +53,22 @@ namespace Com.H.Collections.Generic
                 {
                     // Enumerable is exhausted, safe to dispose the enumerator
                     enumerator.Dispose();
-                    return new ChamberedEnumerable<dynamic>(takenItems, takenItems.Count);
+                    return new ChamberedEnumerable<dynamic>(
+                        takenItems,
+                        takenItems.Count,
+                        disposalTarget: enumerable);
                 }
 
                 // Return the taken items concatenated with remaining items
-                // Pass the enumerator to RemainingItems which will dispose it when done
+                // Pass the enumerator to RemainingItems which will dispose it when done.
+                // Also pass the original source as the disposalTarget so ChamberedEnumerable.Dispose()
+                // can release source-owned resources (e.g. an open DbDataReader) when the caller
+                // abandons iteration mid-probe.
                 var result = Enumerable.Concat(takenItems, enumerator.RemainingItems(true));
-                return new ChamberedEnumerable<dynamic>(result, takenItems.Count);
+                return new ChamberedEnumerable<dynamic>(
+                    result,
+                    takenItems.Count,
+                    disposalTarget: enumerable);
             }
             catch
             {
@@ -112,13 +121,22 @@ namespace Com.H.Collections.Generic
                 {
                     // Enumerable is exhausted, safe to dispose the enumerator
                     await enumerator.DisposeAsync();
-                    return new ChamberedAsyncEnumerable<dynamic>(ToAsyncEnumerable(takenItems), takenItems.Count);
+                    return new ChamberedAsyncEnumerable<dynamic>(
+                        ToAsyncEnumerable(takenItems),
+                        takenItems.Count,
+                        disposalTarget: asyncEnumerable);
                 }
 
                 // Return the taken items concatenated with remaining items
-                // Pass the enumerator to RemainingItemsAsync which will dispose it when done
+                // Pass the enumerator to RemainingItemsAsync which will dispose it when done.
+                // Also pass the original source as the disposalTarget so DisposeAsync can release
+                // source-owned resources (e.g. an open DbDataReader) when the caller abandons
+                // iteration mid-probe.
                 var result = ConcatAsyncEnumerables(ToAsyncEnumerable(takenItems), enumerator.RemainingItemsAsync(true));
-                return new ChamberedAsyncEnumerable<dynamic>(result, takenItems.Count);
+                return new ChamberedAsyncEnumerable<dynamic>(
+                    result,
+                    takenItems.Count,
+                    disposalTarget: asyncEnumerable);
             }
             catch
             {

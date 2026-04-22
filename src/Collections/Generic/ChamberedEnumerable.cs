@@ -18,6 +18,7 @@ namespace Com.H.Collections.Generic
 #endif
     {
         private readonly IEnumerable<T> _enumerable;
+        private readonly object? _disposalTarget;
         private bool _disposed = false;
 
         /// <summary>
@@ -30,9 +31,13 @@ namespace Com.H.Collections.Generic
         /// </summary>
         public bool WasExhausted(int requestedChamberSize) => ChamberedCount < requestedChamberSize;
 
-        internal ChamberedEnumerable(IEnumerable<T> enumerable, int chamberedCount)
+        internal ChamberedEnumerable(
+            IEnumerable<T> enumerable,
+            int chamberedCount,
+            object? disposalTarget = null)
         {
             _enumerable = enumerable ?? throw new ArgumentNullException(nameof(enumerable));
+            _disposalTarget = disposalTarget;
             ChamberedCount = chamberedCount;
         }
 
@@ -43,6 +48,14 @@ namespace Com.H.Collections.Generic
         {
             if (!_disposed)
             {
+                // Dispose the original source, if the factory provided one. The source
+                // typically owns external resources (e.g. a DbDataReader) that the Concat
+                // in _enumerable can't reach through IDisposable on its own.
+                if (_disposalTarget is IDisposable targetDisposable)
+                {
+                    targetDisposable.Dispose();
+                }
+
                 // Dispose the underlying enumerable if it's disposable
                 if (_enumerable is IDisposable disposable)
                 {
@@ -58,6 +71,16 @@ namespace Com.H.Collections.Generic
         {
             if (!_disposed)
             {
+                // Dispose the original source first — prefer async if available.
+                if (_disposalTarget is IAsyncDisposable targetAsyncDisposable)
+                {
+                    await targetAsyncDisposable.DisposeAsync();
+                }
+                else if (_disposalTarget is IDisposable targetDisposable)
+                {
+                    targetDisposable.Dispose();
+                }
+
                 // Dispose the underlying enumerable if it's disposable
                 if (_enumerable is IAsyncDisposable asyncDisposable)
                 {

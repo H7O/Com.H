@@ -338,3 +338,8 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Claude Code
+# Fully ignored on purpose: settings.json auto-accumulates approved commands,
+# which can embed local absolute paths and usernames. Not worth auditing.
+.claude/

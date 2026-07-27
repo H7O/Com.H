@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -60,6 +61,11 @@ namespace Com.H.Threading
             {
                 Task.Run(() =>
                 {
+                    // The Register callback below runs on whichever thread calls
+                    // token.Cancel() — interrupting Thread.CurrentThread there would
+                    // interrupt the CANCELLER. Capture the worker so the timeout
+                    // interrupt hits the (possibly hung) action instead.
+                    var worker = Thread.CurrentThread;
                     using var reg = token.Register(() =>
                     {
                         try
@@ -67,8 +73,11 @@ namespace Com.H.Threading
 
                             if (!done && timeout != null)
                             {
-                                DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
-                                while (DateTime.Now < expiry && !done)
+                                // Monotonic on purpose: a wall-clock step (NTP correction,
+                                // DST on DateTime.Now, VM restore) must not stretch the grace
+                                // window, nor collapse it and interrupt a live worker early.
+                                var grace = Stopwatch.StartNew();
+                                while (grace.Elapsed < (TimeSpan)timeout && !done)
                                 {
                                     Task.Delay(500).GetAwaiter().GetResult();
                                 }
@@ -79,7 +88,7 @@ namespace Com.H.Threading
                                 return;
                             }
 
-                            Thread.CurrentThread.Interrupt();
+                            worker.Interrupt();
                         }
                         catch { }
 
@@ -92,7 +101,7 @@ namespace Com.H.Threading
                         //catch { }
                     }
                     );
-                    action();
+                    try { action(); } finally { done = true; }
                 }, token).GetAwaiter().GetResult();
             }
             catch (ObjectDisposedException)
@@ -107,7 +116,7 @@ namespace Com.H.Threading
             catch (ThreadAbortException)
             {
             }
-            catch(ThreadInterruptedException)
+            catch (ThreadInterruptedException)
             {
             }
             catch
@@ -126,9 +135,11 @@ namespace Com.H.Threading
             bool done = false;
             try
             {
-                
+
                 return Task.Run<T?>(() =>
                 {
+                    // See CancellableRun(Action): interrupt the worker, not the canceller.
+                    var worker = Thread.CurrentThread;
                     using var reg = token.Register(() =>
                     {
                         try
@@ -136,8 +147,11 @@ namespace Com.H.Threading
 
                             if (!done && timeout != null)
                             {
-                                DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
-                                while (DateTime.Now < expiry && !done)
+                                // Monotonic on purpose: a wall-clock step (NTP correction,
+                                // DST on DateTime.Now, VM restore) must not stretch the grace
+                                // window, nor collapse it and interrupt a live worker early.
+                                var grace = Stopwatch.StartNew();
+                                while (grace.Elapsed < (TimeSpan)timeout && !done)
                                 {
                                     Task.Delay(500).GetAwaiter().GetResult();
                                 }
@@ -148,7 +162,7 @@ namespace Com.H.Threading
                                 return;
                             }
 
-                            Thread.CurrentThread.Interrupt();
+                            worker.Interrupt();
                         }
                         catch { }
 
@@ -160,7 +174,7 @@ namespace Com.H.Threading
                         //}
                         //catch { }
                     });
-                    return func();
+                    try { return func(); } finally { done = true; }
 
                 }, token).GetAwaiter().GetResult();
             }
@@ -202,9 +216,15 @@ namespace Com.H.Threading
         public static Task CancellableRunAsync(Action action, CancellationToken token, TimeSpan? timeout = null)
         {
             if (action == null) throw new ArgumentNullException(nameof(action));
+            // A task constructed with an already-cancelled token is born Canceled;
+            // calling Start() on it throws InvalidOperationException. Return a
+            // canceled task instead so callers racing a cancel don't blow up.
+            if (token.IsCancellationRequested) return Task.FromCanceled(token);
             bool done = false;
             var t = new Task(() =>
             {
+                // See CancellableRun(Action): interrupt the worker, not the canceller.
+                var worker = Thread.CurrentThread;
                 using var reg = token.Register(() =>
                 {
                     try
@@ -212,8 +232,11 @@ namespace Com.H.Threading
 
                         if (!done && timeout != null)
                         {
-                            DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
-                            while (DateTime.Now < expiry && !done)
+                            // Monotonic on purpose: a wall-clock step (NTP correction,
+                            // DST on DateTime.Now, VM restore) must not stretch the grace
+                            // window, nor collapse it and interrupt a live worker early.
+                            var grace = Stopwatch.StartNew();
+                            while (grace.Elapsed < (TimeSpan)timeout && !done)
                             {
                                 Task.Delay(500).GetAwaiter().GetResult();
                             }
@@ -223,7 +246,7 @@ namespace Com.H.Threading
                         {
                             return;
                         }
-                        Thread.CurrentThread.Interrupt();
+                        worker.Interrupt();
                     }
                     catch { }
 
@@ -285,9 +308,13 @@ namespace Com.H.Threading
         public static Task<T?> CancellableRunAsync<T>(Func<T> func, CancellationToken token, TimeSpan? timeout = null)
         {
             if (func == null) throw new ArgumentNullException(nameof(func));
+            // See CancellableRunAsync(Action): don't Start a born-cancelled task.
+            if (token.IsCancellationRequested) return Task.FromCanceled<T?>(token);
             bool done = false;
             var t = new Task<T?>(() =>
             {
+                // See CancellableRun(Action): interrupt the worker, not the canceller.
+                var worker = Thread.CurrentThread;
                 using (var reg = token.Register(() =>
                 {
                     try
@@ -295,8 +322,11 @@ namespace Com.H.Threading
 
                         if (!done && timeout != null)
                         {
-                            DateTime expiry = DateTime.Now.Add((TimeSpan)timeout);
-                            while (DateTime.Now < expiry && !done)
+                            // Monotonic on purpose: a wall-clock step (NTP correction,
+                            // DST on DateTime.Now, VM restore) must not stretch the grace
+                            // window, nor collapse it and interrupt a live worker early.
+                            var grace = Stopwatch.StartNew();
+                            while (grace.Elapsed < (TimeSpan)timeout && !done)
                             {
                                 Task.Delay(500).GetAwaiter().GetResult();
                             }
@@ -307,7 +337,7 @@ namespace Com.H.Threading
                             return;
                         }
 
-                        Thread.CurrentThread.Interrupt();
+                        worker.Interrupt();
                     }
                     catch { }
 
@@ -337,7 +367,7 @@ namespace Com.H.Threading
                     {
                     }
                     catch (ThreadInterruptedException)
-                    { 
+                    {
                     }
 
                     catch
@@ -357,7 +387,7 @@ namespace Com.H.Threading
             return t;
         }
 
-        
+
 
 
     }

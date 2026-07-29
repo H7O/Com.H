@@ -1,0 +1,60 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Runs the main test suite against the netstandard2.0 build of Com.H.
+
+    The net10.0 test project exercises the modern targets; nothing exercised the
+    netstandard2.0 output, which is precisely where the polyfills and the
+    conditionally-compiled fallbacks live. .NET Framework 4.8.1 consumes the
+    netstandard2.0 assets, so pointing a net481 test project at the same source
+    files gives that target real coverage.
+
+    Test sources are linked from ..\tests rather than copied, so there is a single
+    source of truth and the two projects cannot drift.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net481</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Com.H.Tests</RootNamespace>
+    <AssemblyName>Com.H.Tests.Net481</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Com.H.csproj" />
+  </ItemGroup>
+
+  <!-- Single source of truth: link, don't copy. -->
+  <ItemGroup>
+    <!-- Com.H's own copy is internal to that assembly, so the test project needs its
+         own for the `record` types declared in the linked test sources. -->
+    <Compile Include="..\src\IsExternalInit.cs" Link="IsExternalInit.cs" />
+    <Compile Include="..\tests\CancellableTests.cs" Link="CancellableTests.cs" />
+    <Compile Include="..\tests\CollectionsAndAsyncTests.cs" Link="CollectionsAndAsyncTests.cs" />
+    <Compile Include="..\tests\CsvExtensionsTests.cs" Link="CsvExtensionsTests.cs" />
+    <Compile Include="..\tests\DataExtensionsTests.cs" Link="DataExtensionsTests.cs" />
+    <Compile Include="..\tests\EventArgsTests.cs" Link="EventArgsTests.cs" />
+    <Compile Include="..\tests\IOExtensionsTests.cs" Link="IOExtensionsTests.cs" />
+    <Compile Include="..\tests\JsonExtensionsTests.cs" Link="JsonExtensionsTests.cs" />
+    <Compile Include="..\tests\LinqExtensionsTests.cs" Link="LinqExtensionsTests.cs" />
+    <Compile Include="..\tests\MailMessageTests.cs" Link="MailMessageTests.cs" />
+    <Compile Include="..\tests\NetExtensionsTests.cs" Link="NetExtensionsTests.cs" />
+    <Compile Include="..\tests\TextExtensionsTests.cs" Link="TextExtensionsTests.cs" />
+    <Compile Include="..\tests\XmlExtensionsTests.cs" Link="XmlExtensionsTests.cs" />
+  </ItemGroup>
+
+</Project>

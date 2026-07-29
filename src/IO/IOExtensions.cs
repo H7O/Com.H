@@ -1,8 +1,6 @@
 ﻿using Com.H.Threading;
 using System;
-#if NET8_0_OR_GREATER
 using System.Buffers;
-#endif
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -476,7 +474,17 @@ namespace Com.H.IO
 
         #region base64 file stream conversions to temp
 
-#if NET8_0_OR_GREATER
+        /// <summary>
+        /// Creates the write-mode FileStream used by the streaming base64 helpers.
+        /// </summary>
+        private static FileStream CreateBase64OutputStream(string path)
+            => new FileStream(
+                path,
+                FileMode.Create,
+                FileAccess.Write,
+                FileShare.None,
+                bufferSize: 81920,
+                useAsync: true);
 
         /// <summary>
         /// Memory-efficient streaming base64 decode and write to a file and return its size.
@@ -500,13 +508,13 @@ namespace Com.H.IO
 
             try
             {
-                await using var fileStream = new FileStream(
-                    filePath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None,
-                    bufferSize: 81920,
-                    useAsync: true);
+                // FileStream is not IAsyncDisposable on netstandard2.0; its synchronous
+                // Dispose still flushes, so the only thing lost is an async flush.
+#if NETSTANDARD2_0
+                using var fileStream = CreateBase64OutputStream(filePath);
+#else
+                await using var fileStream = CreateBase64OutputStream(filePath);
+#endif
 
                 using var transform = new FromBase64Transform();
 
@@ -603,13 +611,11 @@ namespace Com.H.IO
 
             try
             {
-                await using var fileStream = new FileStream(
-                    tempPath,
-                    FileMode.Create,
-                    FileAccess.Write,
-                    FileShare.None,
-                    bufferSize: 81920,
-                    useAsync: true);
+#if NETSTANDARD2_0
+                using var fileStream = CreateBase64OutputStream(tempPath);
+#else
+                await using var fileStream = CreateBase64OutputStream(tempPath);
+#endif
 
                 using var transform = new FromBase64Transform();
 
@@ -703,8 +709,6 @@ namespace Com.H.IO
 
             return (base64Content.Length * 3L / 4L) - padding;
         }
-
-#endif
 
         #endregion
 

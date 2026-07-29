@@ -78,7 +78,6 @@ namespace Com.H.Collections.Generic
             }
         }
 
-#if NET8_0_OR_GREATER
         /// <summary>
         /// Takes an async enumerable, fetches only the first 
         /// enumerable item (or items depending on the chamber size), 
@@ -145,7 +144,6 @@ namespace Com.H.Collections.Generic
                 throw;
             }
         }
-#endif
 
         /// <summary>
         /// Takes an enumerator and returns the rest of the 
@@ -177,7 +175,6 @@ namespace Com.H.Collections.Generic
             }
         }
 
-#if NET8_0_OR_GREATER
         /// <summary>
         /// Takes an async enumerator and returns the rest of the 
         /// items as async enumerable
@@ -249,6 +246,5 @@ namespace Com.H.Collections.Generic
                 yield return item;
             }
         }
-#endif
     }
 }

@@ -94,7 +94,6 @@ namespace Com.H.Xml
 
             elementName = SanitizeXmlElementName(elementName);
 
-#if NET8_0_OR_GREATER
             if (value is IAsyncEnumerable<object> asyncEnumerable)
             {
                 await writer.WriteStartElementAsync(null, elementName, null);
@@ -112,9 +111,6 @@ namespace Com.H.Xml
                 await writer.WriteEndElementAsync();
             }
             else if (value is IEnumerable<object> enumerable)
-#else
-            if (value is IEnumerable<object> enumerable)
-#endif
             {
                 await writer.WriteStartElementAsync(null, elementName, null);
 

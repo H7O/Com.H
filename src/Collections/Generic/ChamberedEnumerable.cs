@@ -13,9 +13,7 @@ namespace Com.H.Collections.Generic
     /// </summary>
     /// <typeparam name="T">The type of elements in the enumerable</typeparam>
     public class ChamberedEnumerable<T> : IEnumerable<T>, IDisposable
-#if NET8_0_OR_GREATER
         , IAsyncDisposable
-#endif
     {
         private readonly IEnumerable<T> _enumerable;
         private readonly object? _disposalTarget;
@@ -66,7 +64,6 @@ namespace Com.H.Collections.Generic
             }
         }
 
-#if NET8_0_OR_GREATER
         public async ValueTask DisposeAsync()
         {
             if (!_disposed)
@@ -94,6 +91,5 @@ namespace Com.H.Collections.Generic
                 _disposed = true;
             }
         }
-#endif
     }
 }

@@ -191,7 +191,7 @@ public class CollectionsAndAsyncTests
         {
             Disposed = true;
             DisposeCallCount++;
-            return ValueTask.CompletedTask;
+            return default;
         }
     }
 

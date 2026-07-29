@@ -14,15 +14,24 @@ A single NuGet package multi-targets:
 - **netstandard2.0** — .NET Framework 4.6.1+, .NET Core 2.0+, Xamarin, Unity
 - **net8.0** / **net9.0** / **net10.0** — latest .NET releases
 
-The netstandard2.0 build includes all core functionality (collections, caching, CSV/XML/template parsing, reflection mapping, networking, SSH, mail, cryptography, shell utilities, threading helpers, etc.). A small number of advanced features are available only on net8.0+:
+As of 10.2.0 the netstandard2.0 build is at **full public-API parity** with the modern targets. Async streams (`IAsyncEnumerable<T>`, `await foreach`), the `System.Text.Json` helpers, the chambered enumerable/async-enumerable types, and the streaming base64-to-file helpers are all available on every target.
 
-| net8.0+ only | Reason |
-|---|---|
-| Async streams (`IAsyncEnumerable<T>`) | No runtime support in netstandard2.0 |
-| `System.Text.Json` helpers | Namespace not available |
-| `SearchValues<char>` file-name validation | API introduced in .NET 8 |
-| Streaming base64-to-file decoding | ArrayPool + Memory patterns |
-| `FileSystemWatcherEx` | Requires non-generic `TaskCompletionSource` + records |
+Where a modern BCL API is used internally, netstandard2.0 uses an equivalent implementation rather than dropping the feature — `SearchValues<char>` falls back to a `HashSet<char>`, span-based scanning to its non-span equivalent, and `FileStream` async disposal to synchronous disposal (which still flushes).
+
+### Testing
+
+The suite runs against **both** builds:
+
+| Project | Target | Exercises |
+|---|---|---|
+| `tests/` | net10.0 | the modern build |
+| `tests.net481/` | net481 | the **netstandard2.0** build, including every polyfill and fallback |
+
+Both projects compile the same linked test sources, so they cannot drift. 123 tests, green on both.
+
+### netstandard2.0 dependencies
+
+The modern targets have **no** package dependencies. netstandard2.0 pulls in `Microsoft.CSharp`, `System.Text.Json` and `Microsoft.Bcl.AsyncInterfaces` to reach the parity described above.
 
 ## License
 

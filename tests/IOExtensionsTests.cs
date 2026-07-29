@@ -136,7 +136,7 @@ public class IOExtensionsTests
             var bytesWritten = await base64.WriteBase64ToFileAsync(tempFile);
             Assert.Equal(original.Length, bytesWritten);
 
-            var written = await File.ReadAllBytesAsync(tempFile);
+            var written = File.ReadAllBytes(tempFile);
             Assert.Equal(original, written);
         }
         finally
@@ -149,7 +149,7 @@ public class IOExtensionsTests
     public async Task WriteBase64ToFileAsync_ExceedsMaxSize_Throws()
     {
         var original = new byte[100];
-        Random.Shared.NextBytes(original);
+        new Random(12345).NextBytes(original); // fixed seed: deterministic across runs and TFMs
         var base64 = Convert.ToBase64String(original);
 
         var tempFile = Path.GetTempFileName();
@@ -181,7 +181,7 @@ public class IOExtensionsTests
             Assert.True(File.Exists(tempPath));
             Assert.Equal(original.Length, fileSize);
 
-            var written = await File.ReadAllBytesAsync(tempPath);
+            var written = File.ReadAllBytes(tempPath);
             Assert.Equal(original, written);
         }
         finally

@@ -9,8 +9,19 @@ namespace Com.H.Text.Template
 {
     // note: fully working beta state (rough draft), requires refactoring and optimization before final release
 
-    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
-    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
+    // NOTE (2026-07-29): do NOT remove ConnectionString, ContentType or PreRender from
+    // TemplateMultiDataRequest. An earlier todo here proposed exactly that. Acting on it would
+    // break deployed reporting engines: their data providers read all three — ConnectionString to
+    // build the DbContext, PreRender to decide whether to substitute values into the query text.
+    //
+    // The original concern was security, not shape. Connection strings sit in plaintext inside
+    // template files that get deployed. The fix for that is to change what the field *carries* —
+    // a configuration key name resolved through IConfiguration, rather than a literal connection
+    // string — while still accepting the literal form for existing templates. That is backward
+    // compatible; removal is not.
+    //
+    // New work should prefer the Com.H.Data.Common.Template package, which supplies a data
+    // provider that parameterises queries instead of substituting them as text.
 
     public class TemplateMultiDataRequest
     {
@@ -316,11 +327,8 @@ namespace Com.H.Text.Template
                 // get data if data request tags available
                 if (dataRequestMatch.Success)
                 {
-                    // todo: move pre-render, connection-string to headers
-
-
-                    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
-                    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
+                    // note: ConnectionString / ContentType / PreRender are load-bearing for
+                    // deployed consumers -- read the NOTE at the top of this file before changing them.
 
                     Dictionary<string, string?> attribs =
                         XElement.Parse(dataRequestMatch.Value)
@@ -339,8 +347,6 @@ namespace Com.H.Text.Template
                         .GetAttrib("pre_render") ?? "false"), out bool preRender);
 
 
-                    // todo: refactor TemplateMultiDataRequest to remove ConnectionString, ContentType, and PreRender
-                    // and have them read from attributes inside Com.H.Ef.Relationa.QueryExtensions.GetDefaultDataProcessors()
                     dataResponse = dataProviders(new()
                     {
                         QueryParamsList = queryParamsList,

@@ -275,12 +275,19 @@ public class CollectionsAndAsyncTests
     [Fact]
     public async Task ToListAsync_WithCancellation_Cancels()
     {
+        // The generator must have exactly one exit path, and it must throw. An earlier version
+        // looped on `while (!ct.IsCancellationRequested)`, which gave it a second, *clean* exit:
+        // when cancellation landed just after Task.Delay completed, the loop condition ended the
+        // sequence normally and ToListAsync returned a list rather than throwing. That made this
+        // test fail roughly one run in four. ToListAsync itself is correct -- it flows the token
+        // via WithCancellation and leaves observing it to the enumerator, per the usual contract.
         async IAsyncEnumerable<int> InfiniteNumbers(
             [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
         {
             int i = 0;
-            while (!ct.IsCancellationRequested)
+            while (true)
             {
+                ct.ThrowIfCancellationRequested();
                 yield return i++;
                 await Task.Delay(1, ct);
             }

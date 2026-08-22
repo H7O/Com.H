@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.2.0</Version>
+    <Version>10.3.0</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -16,7 +16,31 @@
     <PackageReadmeFile>nuget.md</PackageReadmeFile>
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
-    <PackageReleaseNotes>Maintenance release</PackageReleaseNotes>
+    <PackageReleaseNotes>
+Behaviour changes in Com.H.Shell and Com.H.Pdf. Read this before upgrading if you run
+external commands or convert HTML to PDF; nothing else in the library is affected.
+
+* ShellExt.RunCommand no longer throws because a command wrote to standard error. It now
+  throws on a non-zero exit code instead. Chromium reports success on stderr, so the old
+  rule threw on every successful PDF conversion.
+* Both output pipes are drained while the process runs. A child that filled the pipe buffer
+  used to block until the timeout expired no matter how quickly it had finished.
+* Timeouts now kill the whole process tree instead of leaving it running, and throw
+  TimeoutException. Non-zero exits throw the new ShellCommandException, which carries
+  ExitCode and both streams.
+* PDF conversion now verifies that a non-empty file starting with %PDF- was produced, and
+  throws InvalidOperationException when it was not. Chromium can exit zero having written
+  nothing. Set ValidatePdfOutput or PdfExtensions.DefaultValidatePdfOutput to false to opt out.
+* Any existing output file is deleted before conversion starts, so a failed run can no longer
+  be mistaken for a successful one that produced yesterday's file.
+* Fixed: tryDeleteInputUriResourceAfterConversion never deleted anything, because it passed a
+  file:// URL to File.Delete.
+
+New: async overloads with CancellationToken support across ShellExt, ExternalPdfConverter and
+PdfExtensions; ShellExt.RunCommandWithResult for callers that want the exit code without an
+exception; ExternalPdfConverter.ConversionTimeoutMs and ValidatePdfOutput, with matching
+defaults on PdfExtensions.
+    </PackageReleaseNotes>
     <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>

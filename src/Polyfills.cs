@@ -65,6 +65,45 @@ namespace System.Text
     }
 }
 
+namespace System.Diagnostics
+{
+    /// <summary>
+    /// netstandard2.0 shims for <see cref="Process"/> members that only exist on the modern
+    /// target frameworks.
+    /// </summary>
+    internal static class ProcessPolyfills
+    {
+        /// <summary>
+        /// Approximates <c>Process.WaitForExitAsync(CancellationToken)</c> (available in
+        /// .NET 5+), completing when the process exits and cancelling when the token fires.
+        /// </summary>
+        public static async Task WaitForExitAsync(
+            this Process process, CancellationToken cancellationToken = default)
+        {
+            if (process.HasExited) return;
+
+            var exited = new TaskCompletionSource<bool>(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+
+            void OnExited(object? sender, EventArgs e) => exited.TrySetResult(true);
+
+            process.EnableRaisingEvents = true;
+            process.Exited += OnExited;
+            try
+            {
+                // The process may have exited between the check above and the subscription.
+                if (process.HasExited) return;
+
+                using (cancellationToken.Register(() => exited.TrySetCanceled(cancellationToken)))
+                    await exited.Task.ConfigureAwait(false);
+            }
+            finally
+            {
+                process.Exited -= OnExited;
+            }
+        }
+    }
+}
 namespace System.Collections.Generic
 {
     /// <summary>

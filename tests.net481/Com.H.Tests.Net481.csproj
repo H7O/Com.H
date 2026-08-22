@@ -48,11 +48,13 @@
     <Compile Include="..\tests\CsvExtensionsTests.cs" Link="CsvExtensionsTests.cs" />
     <Compile Include="..\tests\DataExtensionsTests.cs" Link="DataExtensionsTests.cs" />
     <Compile Include="..\tests\EventArgsTests.cs" Link="EventArgsTests.cs" />
+    <Compile Include="..\tests\ExternalPdfConverterTests.cs" Link="ExternalPdfConverterTests.cs" />
     <Compile Include="..\tests\IOExtensionsTests.cs" Link="IOExtensionsTests.cs" />
     <Compile Include="..\tests\JsonExtensionsTests.cs" Link="JsonExtensionsTests.cs" />
     <Compile Include="..\tests\LinqExtensionsTests.cs" Link="LinqExtensionsTests.cs" />
     <Compile Include="..\tests\MailMessageTests.cs" Link="MailMessageTests.cs" />
     <Compile Include="..\tests\NetExtensionsTests.cs" Link="NetExtensionsTests.cs" />
+    <Compile Include="..\tests\ShellExtTests.cs" Link="ShellExtTests.cs" />
     <Compile Include="..\tests\TextExtensionsTests.cs" Link="TextExtensionsTests.cs" />
     <Compile Include="..\tests\XmlExtensionsTests.cs" Link="XmlExtensionsTests.cs" />
   </ItemGroup>

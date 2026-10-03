@@ -192,6 +192,38 @@ public class IOExtensionsTests
 
     #endregion
 
+    #region UnifyPathSeperator
+
+    // Each row gives the expected result on Windows (separator '\') and on Linux/macOS (separator '/').
+    // Off Windows a backslash is an ordinary file name character, so it is never touched there.
+    [Theory]
+    [InlineData(@"\\fileserver\share\uploads\2026\a.pdf", @"\\fileserver\share\uploads\2026\a.pdf", @"\\fileserver\share\uploads\2026\a.pdf")]
+    [InlineData(@"\\fileserver\share\\uploads\\a.pdf", @"\\fileserver\share\uploads\a.pdf", @"\\fileserver\share\\uploads\\a.pdf")]
+    [InlineData("//fileserver/share/uploads/a.pdf", @"\\fileserver\share\uploads\a.pdf", "/fileserver/share/uploads/a.pdf")]
+    [InlineData(@"\\\fileserver\share\a.pdf", @"\\fileserver\share\a.pdf", @"\\\fileserver\share\a.pdf")]
+    [InlineData(@"\\?\C:\data\\a.pdf", @"\\?\C:\data\a.pdf", @"\\?\C:\data\\a.pdf")]
+    [InlineData(@"C:\data\\uploads\\\a.pdf", @"C:\data\uploads\a.pdf", @"C:\data\\uploads\\\a.pdf")]
+    [InlineData("C:/data//uploads/", @"C:\data\uploads\", "C:/data/uploads/")]
+    [InlineData("2026//Oct///a.pdf", @"2026\Oct\a.pdf", "2026/Oct/a.pdf")]
+    [InlineData("/data//uploads/a.pdf", @"\data\uploads\a.pdf", "/data/uploads/a.pdf")]
+    [InlineData(@"\data\\uploads\a.pdf", @"\data\uploads\a.pdf", @"\data\\uploads\a.pdf")]
+    public void UnifyPathSeperator_UnifiesAndCollapses_KeepingUncPrefixOnWindows(
+        string input, string expectedOnWindows, string expectedElsewhere)
+    {
+        var expected = Path.DirectorySeparatorChar == '\\' ? expectedOnWindows : expectedElsewhere;
+        Assert.Equal(expected, input.UnifyPathSeperator());
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void UnifyPathSeperator_BlankInput_ReturnedUnchanged(string input)
+    {
+        Assert.Equal(input, input.UnifyPathSeperator());
+    }
+
+    #endregion
+
     #region IsWritableFolder
 
     [Fact]

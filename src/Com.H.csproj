@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.3.0</Version>
+    <Version>10.3.1</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -17,6 +17,18 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
     <PackageReleaseNotes>
+10.3.1
+
+* Fixed: IOExtensions.UnifyPathSeperator collapsed the leading \\ of a UNC path, so
+  \\server\share\file became \server\share\file, which Windows resolves against the current
+  drive (C:\server\share\file). On Windows the run of separators at the start of a path is now
+  reduced to exactly two instead of one, so //server/share/file becomes \\server\share\file and
+  \\?\ and \\.\ device paths survive. Nothing changes on Linux or macOS.
+  If you pass caller-supplied relative paths through it before Path.Combine, a value starting
+  with // or \\ now comes back as a UNC path to another machine. Strip leading separators first.
+
+10.3.0
+
 Behaviour changes in Com.H.Shell and Com.H.Pdf. Read this before upgrading if you run
 external commands or convert HTML to PDF; nothing else in the library is affected.
 

@@ -165,19 +165,37 @@ namespace Com.H.IO
             yield break;
         }
 
+        /// <summary>
+        /// Replaces <see cref="Path.AltDirectorySeparatorChar"/> with <see cref="Path.DirectorySeparatorChar"/>
+        /// and collapses each run of repeated separators into one.
+        /// On Windows the run at the very start becomes exactly two separators instead, because a leading
+        /// pair marks a UNC path (<c>\\server\share\</c>) or a device path (<c>\\?\</c>, <c>\\.\</c>).
+        /// Collapsing it would make Windows resolve the path against the current drive (<c>C:\server\share\</c>).
+        /// </summary>
+        /// <remarks>
+        /// This is not a sanitiser. On Windows, a value that starts with two separators in any mix
+        /// (<c>//host/x</c>, <c>\\host\x</c>, <c>/\host\x</c>) comes back as a UNC path to another machine,
+        /// and <see cref="Path.Combine(string, string)"/> then discards the base folder it is joined to.
+        /// Strip leading separators from caller-supplied relative paths before combining them.
+        /// </remarks>
         public static string UnifyPathSeperator(this string path)
         {
             if (string.IsNullOrWhiteSpace(path)
                 ) return path;
-            var oldPath = path;
-            // string pathSeperator = Path.DirectorySeparatorChar + "";
-            //string altSeperator = pathSeperator.Equals("/") ? "\\" : "/";
-            path = path.Replace(Path.AltDirectorySeparatorChar,
-                Path.DirectorySeparatorChar)
-                .Replace("" + Path.DirectorySeparatorChar + Path.DirectorySeparatorChar,
-                Path.DirectorySeparatorChar + "");
-            if (!oldPath.Equals(path)) return UnifyPathSeperator(path);
-            return path;
+            var separator = Path.DirectorySeparatorChar;
+            var doubleSeparator = new string(separator, 2);
+            path = path.Replace(Path.AltDirectorySeparatorChar, separator);
+
+            var prefix = string.Empty;
+            if (separator == '\\' && path.StartsWith(doubleSeparator, StringComparison.Ordinal))
+            {
+                prefix = doubleSeparator;
+                path = path.TrimStart(separator);
+            }
+
+            while (path.Contains(doubleSeparator))
+                path = path.Replace(doubleSeparator, separator.ToString());
+            return prefix + path;
         }
 
 

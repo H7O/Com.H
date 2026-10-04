@@ -36,9 +36,12 @@ https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     
-    <!-- Deterministic builds for reproducibility -->
+    <!-- Deterministic builds for reproducibility. ContinuousIntegrationBuild rewrites source
+         paths to "/_/" so the package carries no local folder names. It is on for every Release
+         build, not only on CI, so a pack from Visual Studio's right-click Pack comes out the
+         same as one from the command line or GitHub Actions. -->
     <Deterministic>true</Deterministic>
-    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true' or '$(GITHUB_ACTIONS)' == 'true' or '$(Configuration)' == 'Release'">true</ContinuousIntegrationBuild>
     
     <!-- Source Link - enables stepping into source code when debugging -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -46,7 +49,22 @@ https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
     
     <!-- Embed debug symbols in the assembly (avoids separate .snupkg) -->
     <DebugType>embedded</DebugType>
+
+    <!-- Put the source itself in the PDB, not just a Source Link URL pointing at it, so that
+         stepping does not depend on the compiler's source-path rewrite landing (a
+         case-sensitive prefix match that parallel inner builds can silently miss) or on
+         GitHub being reachable. See SOURCELINK-STEPPING.md. -->
+    <EmbedAllSources>true</EmbedAllSources>
+
+    <!-- Stop a pack before it builds anything unless it is Release. See RequireReleaseForPack. -->
+    <BeforePack>RequireReleaseForPack;$(BeforePack)</BeforePack>
   </PropertyGroup>
+
+  <!-- Visual Studio's Pack command packs whichever configuration is selected, and a Debug
+       package is unoptimised and compiled with DEBUG defined. -->
+  <Target Name="RequireReleaseForPack" Condition="'$(Configuration)' != 'Release'">
+    <Error Text="Com.H must be packed from the Release configuration, but this pack is $(Configuration). Switch the configuration to Release, or run: dotnet pack .\src\Com.H.csproj -c Release" />
+  </Target>
 
   <!-- Source Link for GitHub -->
   <ItemGroup>

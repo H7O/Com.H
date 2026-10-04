@@ -1,8 +1,9 @@
 # Source stepping can break silently in this repo
 
-**Status: this repo is exposed and unfixed.** Nothing is wrong with its Source Link
-configuration — the problem is that Source Link alone is not enough to guarantee stepping
-works, and the failure leaves no trace in the build output.
+**Status: fixed on 2026-10-04**, by adding `EmbedAllSources` to `src/Com.H.csproj` (see
+"The fix" below). The rest of this note explains why that line is there, so nobody removes it.
+Nothing is wrong with the Source Link configuration — the problem is that Source Link alone is
+not enough to guarantee stepping works, and the failure leaves no trace in the build output.
 
 Written 2026-08-31, after hitting this for real while packing `Com.H.Net.Ssh` 10.1.0.
 `Com.H.Data.Common` has the identical exposure and the identical note. `Com.H.Net.Ssh` is already fixed.
@@ -79,8 +80,8 @@ repo is ever renamed, made private, or has its history rewritten.
 Keep Source Link as well — it stays useful, and costs nothing.
 
 **Cost:** package size. In `Com.H.Net.Ssh` (4 source files) it went 137 KB to 170 KB. This
-repo has around 49 source files, so the increase will be proportionally larger. Measure before and after
-if it matters.
+repo has around 49 source files, so the increase is proportionally larger: the 10.3.1 package
+went from 574 KB to 883 KB.
 
 The alternatives are worse: always invoking with correctly-cased absolute paths, or always
 passing `-m:1` to serialise the inner builds. Both work, and both fail the moment someone
@@ -168,15 +169,25 @@ Without `EmbedAllSources`, healthy looks like `docs=52 embedded=3 OK` — the 3 
 generated files under `obj/` that `EmbedUntrackedSources` already embeds. Any `BROKEN`
 row means that target framework ships unsteppable.
 
+The one exception is an assembly built without `ContinuousIntegrationBuild`. Its paths are
+never rewritten to `/_/`, and Source Link maps the local folder instead
+(`"C:\\code\\H7O\\Com.H\\*"`), which steps fine. The checker only recognises `/_/`, so it reports
+every target as `BROKEN`. That is what the published 10.3.1 package shows: it was packed from
+Visual Studio before the csproj turned the flag on for Release, and every one of its source
+files was confirmed to resolve on GitHub.
+
 ## Also worth remembering when packing
 
-Pass `-p:ContinuousIntegrationBuild=true` for a release pack. Without it the build is not
-deterministic and source paths are not normalised at all. The csproj already sets it
-automatically when `GITHUB_ACTIONS` is set, so CI needs no flag, but a local pack does:
+`ContinuousIntegrationBuild` makes the build deterministic and rewrites source paths to `/_/`.
+The csproj turns it on for every Release build (as well as on CI), and a pack of any other
+configuration stops with an error before it builds. So Visual Studio's right-click Pack and the
+command line produce the same package, and no flag needs remembering:
 
 ```powershell
-dotnet pack .\src\Com.H.csproj -c Release -p:ContinuousIntegrationBuild=true
+dotnet pack .\src\Com.H.csproj -c Release
 ```
+
+Debug builds leave the flag off, so local debugging keeps opening the files on disk.
 
 Commit and push **before** packing, so the commit the PDB points at actually exists on
 GitHub. Verify afterwards that the stamped commit matches `git rev-parse HEAD`.

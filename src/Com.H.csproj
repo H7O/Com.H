@@ -25,18 +25,10 @@
   of throwing. An already-cancelled token now throws OperationCanceledException before anything
   is started.
 
-10.3.1
-
-* Fixed: IOExtensions.UnifyPathSeperator collapsed the leading \\ of a UNC path, so
-  \\server\share\file became \server\share\file, which Windows resolves against the current
-  drive (C:\server\share\file). On Windows the run of separators at the start of a path is now
-  reduced to exactly two instead of one, so //server/share/file becomes \\server\share\file and
-  \\?\ and \\.\ device paths survive. Nothing changes on Linux or macOS.
-  If you pass caller-supplied relative paths through it before Path.Combine, a value starting
-  with // or \\ now comes back as a UNC path to another machine. Strip leading separators first.
-
-Upgrading from 10.2.x or earlier? 10.3.0 changed how Com.H.Shell and Com.H.Pdf behave, which
-matters if you run external commands or convert HTML to PDF. Its notes list every change:
+Upgrading from an earlier version? 10.3.1 changed what IOExtensions.UnifyPathSeperator does with
+a leading // or \\ on Windows, and 10.3.0 changed how Com.H.Shell and Com.H.Pdf behave. Their
+notes list every change:
+https://www.nuget.org/packages/Com.H/10.3.1#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
     </PackageReleaseNotes>
     <RepositoryUrl>https://github.com/H7O/Com.H</RepositoryUrl>

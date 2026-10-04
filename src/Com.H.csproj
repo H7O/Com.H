@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.3.1</Version>
+    <Version>10.3.2</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -17,6 +17,14 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
     <PackageReleaseNotes>
+10.3.2
+
+* Fixed: ShellExt.RunCommandWithResultAsync (and so RunCommandAsync and the PDF conversion built
+  on it) started the command even when the cancellation token was already cancelled, and a fast
+  command could finish before the cancellation was noticed, so the call returned normally instead
+  of throwing. An already-cancelled token now throws OperationCanceledException before anything
+  is started.
+
 10.3.1
 
 * Fixed: IOExtensions.UnifyPathSeperator collapsed the leading \\ of a UNC path, so

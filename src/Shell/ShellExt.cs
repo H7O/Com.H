@@ -75,7 +75,8 @@ public static class ShellExt
     /// <param name="workingDirectory">Working directory, defaults to the app base directory.</param>
     /// <param name="timeout">How long to wait, in milliseconds, before killing the process.</param>
     /// <param name="environmentVariables">Extra environment variables for the child process.</param>
-    /// <param name="cancellationToken">Kills the process tree and throws when signalled.</param>
+    /// <param name="cancellationToken">Kills the process tree and throws when signalled. If it is
+    /// already signalled, the command is not started at all.</param>
     public static async Task<ShellCommandResult> RunCommandWithResultAsync(
         this string command,
         string args,
@@ -86,6 +87,10 @@ public static class ShellExt
         )
     {
         if (string.IsNullOrWhiteSpace(command)) throw new ArgumentNullException(nameof(command));
+
+        // WaitForExitAsync returns normally for a process that has already exited, even with a
+        // cancelled token, so a fast command could finish before the cancellation was noticed.
+        cancellationToken.ThrowIfCancellationRequested();
 
         using var process = new Process
         {

@@ -32,6 +32,8 @@ internal static class Sh
 
     internal static string Dump(string path) => Args($"type \"{path}\"", $"cat \"{path}\"");
 
+    internal static string Touch(string path) => Args($"echo x> \"{path}\"", $"echo x > \"{path}\"");
+
     /// <summary>
     /// Runs for far longer than any test waits, holding the given file open through a
     /// redirection so a surviving child keeps the handle.
@@ -262,6 +264,21 @@ public class ShellExtTests
         cts.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             Sh.Shell.RunCommandAsync(Sh.Echo("hello"), cancellationToken: cts.Token));
+    }
+
+    [Fact]
+    public async Task RunCommandWithResultAsync_TokenAlreadyCancelled_DoesNotStartTheCommand()
+    {
+        var marker = Path.Combine(Path.GetTempPath(), "comh_shell_" + Guid.NewGuid().ToString("N") + ".txt");
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            Sh.Shell.RunCommandWithResultAsync(Sh.Touch(marker), cancellationToken: cts.Token));
+
+        // Give a command that did start long enough to have written the file.
+        await Task.Delay(500);
+        Assert.False(File.Exists(marker));
     }
 
     #endregion

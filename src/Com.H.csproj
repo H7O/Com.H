@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.3.2</Version>
+    <Version>10.3.3</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -17,17 +17,48 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
     <PackageReleaseNotes>
-10.3.2
+10.3.3
 
-* Fixed: ShellExt.RunCommandWithResultAsync (and so RunCommandAsync and the PDF conversion built
-  on it) started the command even when the cancellation token was already cancelled, and a fast
-  command could finish before the cancellation was noticed, so the call returned normally instead
-  of throwing. An already-cancelled token now throws OperationCanceledException before anything
-  is started.
+Fixes in TextExtensions.Fill and FillDate, which Com.H.Text.Template's rendering also uses:
 
-Upgrading from an earlier version? 10.3.1 changed what IOExtensions.UnifyPathSeperator does with
-a leading // or \\ on Windows, and 10.3.0 changed how Com.H.Shell and Com.H.Pdf behave. Their
-notes list every change:
+* Fixed: a value was read again after it was written. A placeholder inside a value was filled too,
+  and removing a placeholder could join the text around it into a new one. Each placeholder is now
+  replaced once, in the text as written, and the text of a value stays as it is.
+* Fixed: with several QueryParams sets, a set that doesn't have a name wrote its NullReplacement
+  before an earlier set could fill it, so in a template, a placeholder from the data model used
+  inside a data tag's rows became "null". Of the sets whose markers find a placeholder, the latest
+  one that has its name now fills it (with its NullReplacement when the value is null); when none
+  of them has it, it gets the NullReplacement of the latest of them.
+* Fixed: placeholders are now matched character by character, whatever the culture, and names are
+  still looked up ignoring case. The culture-aware comparison used before could give a placeholder
+  another one's value, for example one that differs only by a soft hyphen. With QueryParams sets,
+  a marker written in another case is no longer filled either: {J{a}} for the marker {j{ used to be
+  filled whenever {j{a}} also appeared.
+* Fixed: markers are now matched as written. With markers that contain regex characters, such as
+  [[ ]], (( )) or || ||, Fill with QueryParams sets found nothing, and Fill with a data model wrote
+  nullValueReplacement into the wrong places, such as between every character.
+* Fixed: a $ in a replacement was read as a regex substitution, so $0 wrote the placeholder back
+  and $$ became $: in nullValueReplacement on every target, and with QueryParams sets on
+  netstandard2.0 (and so .NET Framework), in a value or a NullReplacement.
+* Fixed: Fill given a list of QueryParams as an object dropped each set's DataModel when neither
+  markers nor a null replacement were given, so every placeholder got its NullReplacement, and
+  ignored the markers and the null replacement when they were given.
+* Fixed: Fill with a data model threw InvalidCastException for a value that isn't IConvertible,
+  such as a Guid, DateTimeOffset or TimeSpan. Such a value is now written with its own formatting,
+  in the invariant culture like that overload's other values.
+* Fixed: two names that differ only in case got the same value. In FillDate, {date{mm}} took the
+  month of {date{MM}}; in Fill with a data model that has both keys, both placeholders took the
+  value of the key listed first. Each now takes the value for its own spelling.
+* Fixed: Fill with a data model but without both markers applied nullValueReplacement to the whole
+  text. With no marker it was written between every character, with only an opening marker it
+  replaced every one left over, and with only a closing marker it replaced the text before each
+  one left over. Without both markers, text with no value now stays as it is.
+
+Upgrading from an earlier version? A value that holds a placeholder is no longer filled by a later
+pass: fill that value first and pass the result. 10.3.1 changed what IOExtensions.UnifyPathSeperator
+does with a leading // or \\ on Windows, and 10.3.0 changed how Com.H.Shell and Com.H.Pdf behave.
+The notes of 10.3.0, 10.3.1 and 10.3.2 list every change:
+https://www.nuget.org/packages/Com.H/10.3.2#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.1#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
     </PackageReleaseNotes>
@@ -68,7 +99,7 @@ https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
 
   <!-- Source Link for GitHub -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.402" PrivateAssets="All" />
   </ItemGroup>
 
   <!-- Polyfill packages that bring netstandard2.0 to feature parity with the
@@ -77,8 +108,8 @@ https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
        both packages don't hit conflicting transitive versions. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.10" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.10" />
+    <PackageReference Include="System.Text.Json" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>

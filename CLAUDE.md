@@ -15,8 +15,8 @@ warning or error — the package looks fine.
 reproduction, and a small program that checks a built assembly and tells you whether each target
 framework will actually step.
 
-Sibling repos: `Com.H.Data.Common` still has the issue and its own copy of the note.
-`Com.H.Net.Ssh` was fixed on 2026-08-31.
+Sibling repos carry the same fix: `Com.H.Data.Common` since 10.1.0.11, with its own copy of the
+note, and `Com.H.Net.Ssh` since 2026-08-31.
 
 ## Packing
 

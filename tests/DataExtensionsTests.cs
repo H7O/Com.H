@@ -108,6 +108,31 @@ public class DataExtensionsTests
         Assert.Equal(25d, result["age"]);
     }
 
+    [Theory]
+    [InlineData("9007199254740993", typeof(long))]
+    [InlineData("-9007199254740993", typeof(long))]
+    [InlineData("9223372036854775807", typeof(long))]
+    [InlineData("9007199254740992", typeof(long))]       // 2^53: a double can't tell it from 2^53 + 1
+    [InlineData("-9007199254740992", typeof(long))]
+    [InlineData("9007199254740991", typeof(double))]     // below 2^53, each integer is a double of its own
+    [InlineData("-9007199254740991", typeof(double))]
+    [InlineData("5", typeof(double))]
+    [InlineData("2.5", typeof(double))]
+    [InlineData("9007199254740993.0", typeof(double))]   // not written as an integer
+    [InlineData("9223372036854775808", typeof(double))]  // past a long
+    public void GetDataModelParameters_AJsonNumber_IsADouble_AndAnIntegerFrom2To53_ALong(string number, Type type)
+    {
+        foreach (var body in new object[] { JsonDocument.Parse($$"""{"n": {{number}}}""").RootElement, $$"""{"n": {{number}}}""" })
+            Assert.IsType(type, body.GetDataModelParameters()!["n"]);
+    }
+
+    [Fact]
+    public void GetDataModelParameters_AnIntegerFrom2To53_KeepsEveryDigit()
+    {
+        // As a double it was 9007199254740992.
+        Assert.Equal(9007199254740993L, JsonDocument.Parse("""{"n": 9007199254740993}""").RootElement.GetDataModelParameters()!["n"]);
+    }
+
     [Fact]
     public void GetDataModelParameters_NestedJson_ReturnsRawText()
     {

@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net10.0;net11.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>10.3.4</Version>
+    <Version>11.0.0</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -17,17 +17,22 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
     <PackageReleaseNotes>
-10.3.4
+11.0.0
 
-* Fixed: DataExtensions.GetDataModelParameters read every JSON number as a double, so an integer
-  from 2^53 (9007199254740992) on lost its last digits: 9007199254740993 became 9007199254740992.
-  Such an integer, of either sign, is now a long, with every digit, up to the largest long. Every other number is
-  still a double. A caller that casts such a value to double must convert it instead
-  (Convert.ToDouble).
+* New: a net11.0 build, for .NET 11. The netstandard2.0, net8.0, net9.0 and net10.0 builds stay,
+  so nothing changes for a project on an earlier .NET.
+* The major version is 11 because it follows the .NET generation, as 10.0.0 did for .NET 10. No
+  API was added, changed or removed since 10.3.4: code that builds against 10.3.4 builds against
+  11.0.0 as it is.
+* On netstandard2.0 only (which is what .NET Framework uses), the System.Text.Json and
+  Microsoft.Bcl.AsyncInterfaces dependencies move from 10.0.13 to 11.0.0, in step with
+  Com.H.Data.Common 11.0.0. The other builds still have no dependencies.
 
-Upgrading from an earlier version? 10.3.3 changed how Fill and FillDate treat a value that holds a
-placeholder, 10.3.1 what IOExtensions.UnifyPathSeperator does with a leading // or \\ on Windows,
-and 10.3.0 how Com.H.Shell and Com.H.Pdf behave. The notes of 10.3.0 to 10.3.3 list every change:
+Upgrading from before 10.3.4? 10.3.4 changed the type GetDataModelParameters gives a JSON integer
+from 2^53 on, 10.3.3 how Fill and FillDate treat a value that holds a placeholder, 10.3.1 what
+IOExtensions.UnifyPathSeperator does with a leading // or \\ on Windows, and 10.3.0 how Com.H.Shell
+and Com.H.Pdf behave. The notes of 10.3.0 to 10.3.4 list every change:
+https://www.nuget.org/packages/Com.H/10.3.4#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.3#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.2#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.1#releasenotes-body-tab
@@ -79,8 +84,8 @@ https://www.nuget.org/packages/Com.H/10.3.0#releasenotes-body-tab
        both packages don't hit conflicting transitive versions. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="System.Text.Json" Version="10.0.13" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
+    <PackageReference Include="System.Text.Json" Version="11.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
   </ItemGroup>
 
   <ItemGroup>

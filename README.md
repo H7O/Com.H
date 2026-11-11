@@ -12,7 +12,7 @@ dotnet add package Com.H
 A single NuGet package multi-targets:
 
 - **netstandard2.0** — .NET Framework 4.6.1+, .NET Core 2.0+, Xamarin, Unity
-- **net8.0** / **net9.0** / **net10.0** — latest .NET releases
+- **net8.0** / **net9.0** / **net10.0** / **net11.0** — latest .NET releases
 
 As of 10.2.0 the netstandard2.0 build is at **full public-API parity** with the modern targets. Async streams (`IAsyncEnumerable<T>`, `await foreach`), the `System.Text.Json` helpers, the chambered enumerable/async-enumerable types, and the streaming base64-to-file helpers are all available on every target.
 
@@ -20,14 +20,14 @@ Where a modern BCL API is used internally, netstandard2.0 uses an equivalent imp
 
 ### Testing
 
-The suite runs against **both** builds:
+The suite runs against the modern builds and the netstandard2.0 build:
 
 | Project | Target | Exercises |
 |---|---|---|
-| `tests/` | net10.0 | the modern build |
+| `tests/` | net10.0 and net11.0 | the modern builds, one run on each runtime |
 | `tests.net481/` | net481 | the **netstandard2.0** build, including every polyfill and fallback |
 
-Both projects compile the same linked test sources, so they cannot drift. 123 tests, green on both.
+Both projects compile the same linked test sources, so they cannot drift. 215 tests, green on all three runtimes.
 
 ### netstandard2.0 dependencies
 

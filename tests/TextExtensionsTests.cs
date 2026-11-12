@@ -49,6 +49,151 @@ public class TextExtensionsTests
         Assert.Equal(new DateTime(2024, 6, 15), result[1]);
     }
 
+    /// <summary>Runs something as a machine set to the named culture would. "" is the invariant culture.</summary>
+    private static T In<T>(string culture, Func<T> run)
+    {
+        var before = CultureInfo.CurrentCulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+        try
+        {
+            return run();
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = before;
+        }
+    }
+
+    // ExtractDates: an entry that is not a date
+
+    [Theory]
+    [InlineData("soon")]
+    // A word, a space and the letter d. Before 11.0.1 this was taken for a date like "Nov 5", and threw.
+    [InlineData("next day")]
+    // The letter d on both sides of a hyphen. Before 11.0.1 this was taken for a date like "11-05", and threw.
+    [InlineData("mid-december")]
+    [InlineData("d-d")]
+    [InlineData("Foo 12")]
+    [InlineData("2026-02-30")]
+    [InlineData("2026-13-45")]
+    public void ExtractDates_AnEntryThatIsNotADate_IsLeftOut(string entry)
+    {
+        foreach (var culture in new[] { "", "en-US", "en-GB", "de-DE", "ar-AE" })
+        {
+            Assert.Empty(In(culture, () => entry.ExtractDates().ToList()));
+            Assert.Equal(
+                new[] { new DateTime(2026, 12, 24), new DateTime(2026, 12, 31) },
+                In(culture, () => $"2026-12-24|{entry}|2026-12-31".ExtractDates().ToList()));
+        }
+    }
+
+    // ExtractDates: a month's name and a day, without a year
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("en-US")]
+    // The day is written first here, and the general reader takes "Nov 5" as November of the year 05.
+    [InlineData("en-GB")]
+    [InlineData("de-DE")]
+    [InlineData("fr-FR")]
+    [InlineData("ar-AE")]
+    // Cultures with a calendar of their own.
+    [InlineData("ar-SA")]
+    [InlineData("th-TH")]
+    public void ExtractDates_AMonthsNameAndADay_IsThatDayOfThisYearInEveryCulture(string culture)
+    {
+        var year = DateTime.Now.Year;
+
+        var dates = In(culture, () => "Nov 5|nov 05|NOVEMBER  5|Dec 31|January 1".ExtractDates().ToList());
+
+        Assert.Equal(new[] { new DateTime(year, 11, 5), new DateTime(year, 12, 31), new DateTime(year, 1, 1) }, dates);
+    }
+
+    [Theory]
+    [InlineData("en-GB")]
+    [InlineData("de-DE")]
+    [InlineData("fr-FR")]
+    [InlineData("es-ES")]
+    [InlineData("ru-RU")]
+    [InlineData("tr-TR")]
+    [InlineData("ar-AE")]
+    public void ExtractDates_AMonthsNameInTheLanguageOfTheCulture_IsRead(string culture)
+    {
+        var format = CultureInfo.GetCultureInfo(culture).DateTimeFormat;
+        var year = DateTime.Now.Year;
+        var read = 0;
+        for (var month = 1; month <= 12; month++)
+        {
+            // The names as this runtime has them, which differ between .NET and .NET Framework.
+            var names = new[]
+            {
+                format.MonthNames[month - 1], format.AbbreviatedMonthNames[month - 1],
+                format.MonthGenitiveNames[month - 1], format.AbbreviatedMonthGenitiveNames[month - 1],
+            };
+            foreach (var name in names.Distinct().Where(name => System.Text.RegularExpressions.Regex.IsMatch(name, @"^\p{L}+\.?$")))
+            {
+                Assert.Equal(new[] { new DateTime(year, month, 5) }, In(culture, () => $"{name} 5".ExtractDates().ToList()));
+                read++;
+            }
+        }
+        Assert.True(read >= 12, $"Only {read} names of {culture} were tried.");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("en-US")]
+    [InlineData("en-GB")]
+    [InlineData("ar-AE")]
+    public void ExtractDates_ANumberThatIsNotADayOfTheMonth_IsNotTakenForAYear(string culture)
+    {
+        var year = DateTime.Now.Year;
+
+        // Where the day is written first, the general reader takes "Feb 30" as February of 2030.
+        Assert.Empty(In(culture, () => "Feb 30|Nov 31|Nov 0|Jan 32|Mar 45|Dec 99".ExtractDates().ToList()));
+
+        var expected = DateTime.IsLeapYear(year) ? new[] { new DateTime(year, 2, 29) } : new DateTime[0];
+        Assert.Equal(expected, In(culture, () => "Feb 29".ExtractDates().ToList()));
+    }
+
+    /// <summary>
+    /// The rule for a month's name and a day is what a culture that writes the month first has always
+    /// read. So where the month is written first nothing changed in 11.0.1, whatever the number is.
+    /// </summary>
+    [Theory]
+    [InlineData("")]
+    [InlineData("en-US")]
+    public void ExtractDates_AMonthsNameAndANumber_IsReadAsWhereTheMonthIsWrittenFirst(string culture)
+    {
+        var english = CultureInfo.InvariantCulture.DateTimeFormat;
+        var different = new List<string>();
+        for (var month = 0; month < 12; month++)
+            foreach (var name in new[] { english.MonthNames[month], english.AbbreviatedMonthNames[month].ToLowerInvariant() })
+                for (var number = 0; number <= 99; number++)
+                    foreach (var entry in new[] { $"{name} {number}", $"{name}  {number:00}", $"{name}. {number}" })
+                    {
+                        var (general, extracted) = In(culture, () =>
+                            (DateTime.TryParse(entry, out var date) ? new[] { date } : new DateTime[0], entry.ExtractDates().ToArray()));
+                        if (!general.SequenceEqual(extracted)) different.Add(entry);
+                    }
+
+        Assert.Empty(different);
+    }
+
+    // ExtractDates: a date in numbers, without a year
+
+    [Fact]
+    public void ExtractDates_ADateInNumbersWithoutAYear_IsReadInTheOrderOfTheCulture()
+    {
+        var year = DateTime.Now.Year;
+
+        Assert.Equal(new[] { new DateTime(year, 11, 5) }, In("en-US", () => "11-05".ExtractDates().ToList()));
+        Assert.Equal(new[] { new DateTime(year, 5, 11) }, In("en-GB", () => "11-05".ExtractDates().ToList()));
+
+        // What that order can't make a date of is left out, and not read in the other order.
+        Assert.Empty(In("en-US", () => "13-05".ExtractDates().ToList()));
+        Assert.Empty(In("en-GB", () => "05-13".ExtractDates().ToList()));
+    }
+
     // Fill with QueryParams sets
 
     [Fact]

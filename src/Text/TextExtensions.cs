@@ -226,15 +226,28 @@ namespace Com.H.Text
             .Contains(item?.ToUpperInvariant()) ?? false;
 
         /// <summary>
-        /// Extracts dates from a string, if the dates are partial dates without a year,
-        /// then this method extract them and returns them as dates by adding the current year.
-        /// E.g. for partial date: 'Nov 5' or '11-05'
+        /// Extracts the dates written in a string, one to an entry, with | between two entries unless
+        /// other separators are given. An entry that is not a date is left out.
         /// </summary>
         /// <param name="text"></param>
         /// <param name="seperators"></param>
-        /// <returns></returns>
+        /// <returns>Each date once, in the order the entries are written.</returns>
+        /// <remarks>
+        /// A month's name and a day without a year, such as 'Nov 5', is that day of the current year,
+        /// in every culture. The name is in English or, where the current culture uses the Gregorian
+        /// calendar, in that culture's language. With a number that is not a day of that month, as in
+        /// 'Feb 30', the entry is left out.
+        /// <para>
+        /// Every other entry is read by <see cref="DateTime.TryParse(string, out DateTime)"/> in the
+        /// current culture. So a date in numbers without a year, such as '11-05', is read in the
+        /// culture's own order: November 5 where the month is written first, May 11 where the day is.
+        /// </para>
+        /// <para>
+        /// The entries are read when the result is enumerated, in the culture and the year of that moment.
+        /// </para>
+        /// </remarks>
         public static IEnumerable<DateTime> ExtractDates(
-            this string text, 
+            this string text,
             string[]? seperators = null)
         {
 
@@ -249,24 +262,63 @@ namespace Com.H.Text
             dates_string = dates_string.Select(x => x.Trim());
 #endif
 
-            // normal
-            var normal = dates_string
-                  .Where(x => DateTime.TryParse(x, out _));
+            return dates_string
+                .Select(ReadDate)
+                .Where(date => date.HasValue)
+                .Select(date => date!.Value)
+                .Distinct();
+        }
 
-            dates_string = dates_string.Except(normal);
+        /// <summary>
+        /// A month's name and a day and nothing else, such as "Nov 5", "nov. 05" or "November  5".
+        /// The digits are 0 to 9 only, which are the ones int.Parse reads.
+        /// </summary>
+        private static readonly Regex MonthNameAndDay = new(
+            @"^(?<month>\p{L}+)\.?\s+(?<day>[0-9]{1,2})$", RegexOptions.CultureInvariant);
 
-            // without year (MM-dd)
-            var MM_dd = dates_string.Where(x => Regex.IsMatch(x, @"d{1,2}\s*-\s*d{1,2}"));
-            dates_string = dates_string.Except(MM_dd);
+        /// <summary>The date one entry of <see cref="ExtractDates"/> holds, or null if it holds none.</summary>
+        private static DateTime? ReadDate(string entry)
+        {
+            // A month's name and a day is read here, before the general reader gets it, because the
+            // general reader goes by the culture. Where the month is written first it takes "Nov 5"
+            // as November 5 of this year. Where the day is written first it takes the number for a
+            // year, which makes it November 1 of 2005. Here it is a day in every culture, and one
+            // the month doesn't have makes no date: that is what the general reader does where the
+            // month is written first.
+            var named = MonthNameAndDay.Match(entry);
+            if (named.Success && MonthNamed(named.Groups["month"].Value) is int month)
+            {
+                var year = DateTime.Now.Year;
+                var day = int.Parse(named.Groups["day"].Value, CultureInfo.InvariantCulture);
+                return day >= 1 && day <= DateTime.DaysInMonth(year, month)
+                    ? new DateTime(year, month, day)
+                    : (DateTime?)null;
+            }
 
-            // without year (MMM dd)
-            var MMM_dd = dates_string.Where(x => Regex.IsMatch(x, @"[a-zA-Z]+\sd{1,2}"));
-            //dates_string = dates_string.Except(MMM_dd);
-            MMM_dd = MMM_dd.Select(x => Regex.Replace(x, @"[ ]{2,}", " "));
+            return DateTime.TryParse(entry, out var date) ? date : (DateTime?)null;
+        }
 
-            return normal.Select(x => DateTime.Parse(x))
-                .Union(MM_dd.Select(x => DateTime.Parse($"{DateTime.Now.Year}-{x}")))
-                .Union(MMM_dd.Select(x => DateTime.Parse($"{x}, {DateTime.Now.Year}")));
+        /// <summary>The number of the month with this name, 1 to 12, or null if it is no month's name.</summary>
+        private static int? MonthNamed(string name)
+        {
+            var current = CultureInfo.CurrentCulture.DateTimeFormat;
+            // A culture's own names count only if its months are the Gregorian ones. The ninth month
+            // of the Hijri calendar is not September.
+            var formats = current.Calendar is GregorianCalendar
+                ? new[] { current, CultureInfo.InvariantCulture.DateTimeFormat }
+                : new[] { CultureInfo.InvariantCulture.DateTimeFormat };
+
+            foreach (var format in formats)
+                foreach (var names in new[]
+                    {
+                        format.MonthNames, format.AbbreviatedMonthNames,
+                        format.MonthGenitiveNames, format.AbbreviatedMonthGenitiveNames,
+                    })
+                    for (var i = 0; i < 12 && i < names.Length; i++)
+                        // Some cultures write a short name with a dot of its own, as French does in "nov.".
+                        if (names[i].TrimEnd('.').Equals(name, StringComparison.OrdinalIgnoreCase))
+                            return i + 1;
+            return null;
         }
 
         /// <summary>

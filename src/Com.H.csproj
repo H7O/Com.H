@@ -7,7 +7,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>Com.H</AssemblyName>
     <RootNamespace>Com.H</RootNamespace>
-    <Version>11.0.0</Version>
+    <Version>11.0.1</Version>
     <Authors>Hussein Al Bayati</Authors>
     <Description>General purpose library containing, in its current form, a very small collection of helpful functionalties that don't warrent a seperate library for each at this early stage.</Description>
     <Copyright>Hussein Al Bayati</Copyright>
@@ -17,21 +17,33 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>general purpose</PackageTags>
     <PackageReleaseNotes>
-11.0.0
+11.0.1
 
-* New: a net11.0 build, for .NET 11. The netstandard2.0, net8.0, net9.0 and net10.0 builds stay,
-  so nothing changes for a project on an earlier .NET.
-* The major version is 11 because it follows the .NET generation, as 10.0.0 did for .NET 10. No
-  API was added, changed or removed since 10.3.4: code that builds against 10.3.4 builds against
-  11.0.0 as it is.
-* On netstandard2.0 only (which is what .NET Framework uses), the System.Text.Json and
-  Microsoft.Bcl.AsyncInterfaces dependencies move from 10.0.13 to 11.0.0, in step with
-  Com.H.Data.Common 11.0.0. The other builds still have no dependencies.
+All of it is in ExtractDates (Com.H.Text), which reads the dates written in a text. No API was
+added, changed or removed.
 
-Upgrading from before 10.3.4? 10.3.4 changed the type GetDataModelParameters gives a JSON integer
-from 2^53 on, 10.3.3 how Fill and FillDate treat a value that holds a placeholder, 10.3.1 what
-IOExtensions.UnifyPathSeperator does with a leading // or \\ on Windows, and 10.3.0 how Com.H.Shell
-and Com.H.Pdf behave. The notes of 10.3.0 to 10.3.4 list every change:
+* Fixed: an entry that is not a date threw a FormatException if it held a word, a space and the
+  letter d, as "next day" does, or the letter d on both sides of a hyphen, as "mid-december" does.
+  It is now left out, like every other entry that is not a date. Two patterns meant for dates
+  without a year looked for the letter d where they meant a digit.
+* Fixed: a month's name and a day without a year, such as "Nov 5", is that day of the current year
+  in every culture, as the method's description says. It was so only where the culture writes the
+  month first, as en-US and the invariant culture do. Where the culture writes the day first, as
+  en-GB, de-DE and ar-AE do, the number was taken for a year, which gave November 1 of 2005. The
+  name can be in English or in the culture's own language.
+* Changed, in those day-first cultures only: a month's name with a number that is not a day of
+  that month, such as "Feb 30" or "Mar 45", is left out. It gave February 1 of 2030 and March 1
+  of 1945.
+* Not changed: where the month is written first, every month's name with every number gives what
+  it gave before. And a date in numbers without a year, such as "11-05", is still read in the
+  culture's own order: November 5 where the month comes first, May 11 where the day does.
+
+Upgrading from before 11.0.0? 11.0.0 added the net11.0 build and changed no API. 10.3.4 changed
+the type GetDataModelParameters gives a JSON integer from 2^53 on, 10.3.3 how Fill and FillDate
+treat a value that holds a placeholder, 10.3.1 what IOExtensions.UnifyPathSeperator does with a
+leading // or \\ on Windows, and 10.3.0 how Com.H.Shell and Com.H.Pdf behave. The notes of 10.3.0
+to 11.0.0 list every change:
+https://www.nuget.org/packages/Com.H/11.0.0#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.4#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.3#releasenotes-body-tab
 https://www.nuget.org/packages/Com.H/10.3.2#releasenotes-body-tab

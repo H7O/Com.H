@@ -27,7 +27,7 @@ The suite runs against the modern builds and the netstandard2.0 build:
 | `tests/` | net10.0 and net11.0 | the modern builds, one run on each runtime |
 | `tests.net481/` | net481 | the **netstandard2.0** build, including every polyfill and fallback |
 
-Both projects compile the same linked test sources, so they cannot drift. 244 tests, green on all three runtimes.
+Both projects compile the same linked test sources, so they cannot drift. 253 tests, green on all three runtimes.
 
 ### netstandard2.0 dependencies
 

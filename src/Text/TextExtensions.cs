@@ -98,25 +98,63 @@ namespace Com.H.Text
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
+        /// <remarks>
+        /// The digits can be those of any script: 15 written in Arabic-Indic digits (U+0661 U+0665)
+        /// is 15.
+        /// </remarks>
         public static IEnumerable<int> ExtractInts(this string text)
         {
             foreach (var match in Regex.Matches(text, @"-?\d+", RegexOptions.Singleline)
                 .Cast<Match>().Where(m=>m is not null))
-                yield return int.Parse(match.ToString(), CultureInfo.InvariantCulture);
+                yield return ParseInt(match.Value);
         }
 
 
+        /// <summary>
+        /// Extracts the whole numbers of a list such as "1,15,25..28": each number between commas,
+        /// and where two numbers are joined by anything else, every number from the lower to the
+        /// higher. Each number is given once, in ascending order.
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// The digits can be those of any script. Beside the comma, the Arabic comma (U+060C), the
+        /// fullwidth comma (U+FF0C) and the ideographic comma (U+3001) stand between two entries of
+        /// the list. White space is taken out before the list is read.
+        /// </remarks>
         public static IEnumerable<int> ExtractRangeInts(this string text)
         =>
             Regex.Replace(text, @"\s+", "")
-                .Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                // The commas of the scripts whose digits \d takes. Someone who types Arabic-Indic or
+                // fullwidth digits types that script's comma with them, and a comma that is not known
+                // here joins the numbers on its two sides into a range.
+                .Split(new char[] { ',', '\u060C', '\uFF0C', '\u3001' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(group => Regex.Matches(group, @"\d+").Cast<Match>())
                 .Select(match => new
                 {
-                    Max = match.Max(v => int.Parse(v.Value, CultureInfo.InvariantCulture)),
-                    Min = match.Min(v => int.Parse(v.Value, CultureInfo.InvariantCulture))
+                    Max = match.Max(v => ParseInt(v.Value)),
+                    Min = match.Min(v => ParseInt(v.Value))
                 }).SelectMany(range => Enumerable.Range(range.Min, range.Max - range.Min + 1))
                 .Distinct().OrderBy(x => x);
+
+        /// <summary>
+        /// Reads a whole number that the pattern \d found. That pattern takes the decimal digits of
+        /// every script and int.Parse reads 0 to 9 only, so before 11.0.1 a number in Arabic-Indic
+        /// digits was found and then threw a FormatException.
+        /// </summary>
+        private static int ParseInt(string number)
+        {
+            // The minus sign and the digits 0 to 9 all come before the digits of the other scripts.
+            if (number.All(c => c <= '9')) return int.Parse(number, CultureInfo.InvariantCulture);
+
+            var digits = new StringBuilder(number.Length);
+            foreach (var c in number)
+            {
+                var value = CharUnicodeInfo.GetDecimalDigitValue(c);
+                digits.Append(value < 0 ? c : (char)('0' + value));
+            }
+            return int.Parse(digits.ToString(), CultureInfo.InvariantCulture);
+        }
 
 
         public static string ExtractAlphabet(this string text)

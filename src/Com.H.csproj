@@ -19,8 +19,19 @@
     <PackageReleaseNotes>
 11.0.1
 
-All of it is in ExtractDates (Com.H.Text), which reads the dates written in a text. No API was
-added, changed or removed.
+Fixes in three methods of Com.H.Text that read dates and numbers out of a text. No API was added,
+changed or removed.
+
+ExtractInts and ExtractRangeInts, which read whole numbers:
+
+* Fixed: a number written in the digits of another script, such as Arabic-Indic, Persian or
+  fullwidth digits, threw a FormatException. The methods found such digits and could not read
+  them. They are now read as the numbers they are.
+* ExtractRangeInts takes the Arabic comma, the fullwidth comma and the ideographic comma between
+  two entries of a list, beside the ordinary comma. They are the commas typed with those digits,
+  and any other character between two numbers makes a range of them.
+
+ExtractDates, which reads dates:
 
 * Fixed: an entry that is not a date threw a FormatException if it held a word, a space and the
   letter d, as "next day" does, or the letter d on both sides of a hyphen, as "mid-december" does.

@@ -194,6 +194,36 @@ public class TextExtensionsTests
         Assert.Empty(In("en-GB", () => "05-13".ExtractDates().ToList()));
     }
 
+    // ExtractInts and ExtractRangeInts
+
+    [Theory]
+    [InlineData("a 12 b -3, 007", new[] { 12, -3, 7 })]
+    // 15 and 2026 in Arabic-Indic digits. Before 11.0.1 the method found them and threw on reading them.
+    [InlineData("١٥ ٢٠٢٦", new[] { 15, 2026 })]
+    // 15 in Persian, Devanagari and fullwidth digits.
+    [InlineData("۱۵ १५ １５", new[] { 15, 15, 15 })]
+    // A minus sign before Arabic-Indic digits, and the digits of two scripts in one number.
+    [InlineData("-٣ 1٥", new[] { -3, 15 })]
+    public void ExtractInts_DigitsOfAnyScript_AreRead(string text, int[] expected)
+    {
+        Assert.Equal(expected, text.ExtractInts().ToArray());
+    }
+
+    [Theory]
+    [InlineData("1,15,25..28", new[] { 1, 15, 25, 26, 27, 28 })]
+    [InlineData(" 28 - 25, 15 ,1, 15", new[] { 1, 15, 25, 26, 27, 28 })]
+    // The first list in Arabic-Indic digits.
+    [InlineData("١,١٥,٢٥..٢٨", new[] { 1, 15, 25, 26, 27, 28 })]
+    // 1 and 15 with the Arabic comma between them, which is the comma of an Arabic keyboard.
+    // Taken for something other than a comma, it would make this every number from 1 to 15.
+    [InlineData("١، ١٥", new[] { 1, 15 })]
+    // 1, 15 and 3 in fullwidth digits, with the fullwidth and the ideographic comma.
+    [InlineData("１，１５、３", new[] { 1, 3, 15 })]
+    public void ExtractRangeInts_DigitsAndCommasOfOtherScripts_AreRead(string text, int[] expected)
+    {
+        Assert.Equal(expected, text.ExtractRangeInts().ToArray());
+    }
+
     // Fill with QueryParams sets
 
     [Fact]
